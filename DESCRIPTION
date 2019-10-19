@@ -16,6 +16,8 @@ Imports:
     raster,
     MASS, 
     reshape2,
+    foreach,
+    doParallel,
     boot,
     gnm,
     magrittr
