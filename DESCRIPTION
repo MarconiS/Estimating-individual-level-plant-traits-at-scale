@@ -1,4 +1,4 @@
-Package: neonLeafR
+Package: hiPyRneon
 Type: Package
 Title: Collection of methods to predict leaf traits from hiperspectral imaging and leaf traits.
 Version: 0.1.0

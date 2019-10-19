@@ -14,11 +14,11 @@ get_random_bags<- function(loops = 1, seed = 1987){
 
   unqCrown = unique(allData["pixel_crownID"])
   #get number of individual crowns
-  bootDat <- allData[1:length(unqCrown), ]
+  bootDat <- allData[1:nrow(unqCrown), ]
   bootDat[] <- NA
   for (laps in 1:loops){
     tk = 1
-    for(i in unqCrown){
+    for(i in unlist(unqCrown)){
       if(sum(allData["pixel_crownID"]==i)==1){
         #only one pixel in the bag. Use that one for the permutation
         bootDat[tk,] <- allData[which(allData["pixel_crownID"]==i),]

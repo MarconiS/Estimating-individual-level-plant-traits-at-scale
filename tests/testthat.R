@@ -1,4 +1,4 @@
 library(testthat)
-library(neonLeafR)
+library(hiPyRneon)
 
-test_check("neonLeafR")
+test_check("hiPyRneon")
