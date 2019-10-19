@@ -21,7 +21,7 @@ Imports:
     boot,
     gnm,
     magrittr
-Remotes: giothub::NEONScience/NEON-geolocation/geoNEON
+Remotes: github::NEONScience/NEON-geolocation/geoNEON
 Suggests: 
     testthat (>= 2.1.0)
 RoxygenNote: 6.1.99.9001
