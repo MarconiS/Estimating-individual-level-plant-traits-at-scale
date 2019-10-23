@@ -5,8 +5,6 @@
 #' @export
 #' @examples
 #' @importFrom magrittr "%>%"
-#'
-#'
 cut_set<-function(aug.X, c.id, prop = 0.7){
   species <- unique(aug.X[["taxonID"]])
   train.data <- 0

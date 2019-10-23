@@ -5,8 +5,6 @@
 #' @export
 #' @examples
 #' @importFrom magrittr "%>%"
-#'
-#'maybe you want ot batchtool from here: get teh seed, get the split, build the model
 build_model <- function(loop=1,  nrmlz = T, trait = "P_pct"){
   #are random combinations of pixels already set up?
   combinations <- file.exists(paste('./indir/Permutations/onePix1Crown_', loop, ".csv", sep=""))

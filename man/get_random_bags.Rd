@@ -4,7 +4,7 @@
 \alias{get_random_bags}
 \title{retrieve vegetation structure data  from NEON}
 \usage{
-get_random_bags(loops = 1, seed = 1987)
+get_random_bags(lp = 1, seed = 1987)
 }
 \value{
 

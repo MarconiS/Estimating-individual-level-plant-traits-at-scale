@@ -4,7 +4,7 @@
 \alias{build_model}
 \title{retrieve vegetation structure data  from NEON}
 \usage{
-build_model(loops = 1000, cores = 1, nrmlz = T, trait = "P_pct")
+build_model(loop = 1, nrmlz = T, trait = "P_pct")
 }
 \value{
 

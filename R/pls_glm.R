@@ -6,7 +6,6 @@
 #' @examples
 #' @importFrom magrittr "%>%"
 #' @import plsRglm
-
 pls_glm <- function(ll = NULL, trait = "N_pct", nrmlz=T){
     #get traits data
     cr.Traits <- readr::read_csv(paste("./indir/Traits/CrownTraits.csv",sep=""))

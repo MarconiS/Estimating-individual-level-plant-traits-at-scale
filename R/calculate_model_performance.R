@@ -5,7 +5,6 @@
 #' @export
 #' @examples
 #' @importFrom magrittr "%>%"
-#'
 calculate_model_performance <- function(trait = "P_pct", snap_path = "", get_best = F){
   #retrieve number of snaps
   loops <- list.files("./outdir/snaps/") %>% length
