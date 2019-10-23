@@ -14,6 +14,4 @@ retrieve vegetation structure data  from NEON
 }
 \examples{
 get_random_bags(1000)
-
-
 }

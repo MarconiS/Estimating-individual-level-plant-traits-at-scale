@@ -1,4 +1,4 @@
-pixel_crownID,site,year,name,sample_date,dry_mass_g,leaf_area_cm2,SLA_cm2.g,LMA_g.m2,d13C,d15N,C_pct,N_pct,P_pct,C_N,C_P,N_P
+individualID,siteID,year,taxonID,sample_date,dry_mass_g,leaf_area_cm2,SLA_cm2.g,LMA_g.m2,d13C,d15N,C_pct,N_pct,P_pct,C_N,C_P,N_P
 239,Ordway,2015,Nysyl,5/20/15,1.79,180.73,100.9,99.1,-28.18,-0.4,51.31,1.59,0.09,32.22,586.91,18.19
 326,Ordway,2015,Quhem,5/18/15,1.96,154.24,78.8,126.9,-30.11,-2.91,51.12,1.42,0.08,35.9,617.3,17.15
 361,Ordway,2015,Cagla,5/26/15,1.93,213.52,110.9,90.2,-28.82,-0.57,47.09,2.27,0.12,20.75,391.38,18.87
