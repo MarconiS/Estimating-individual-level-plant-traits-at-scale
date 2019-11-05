@@ -4,7 +4,7 @@
 \alias{pls_glm}
 \title{retrieve vegetation structure data  from NEON}
 \usage{
-pls_glm(ll = NULL, trait = "N_pct", nrmlz = T)
+pls_glm(ll = NULL, trait = "N_pct", nrmlz = F)
 }
 \value{
 
