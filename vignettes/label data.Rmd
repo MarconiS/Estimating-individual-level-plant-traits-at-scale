@@ -1,0 +1,45 @@
+---
+title: "label data"
+author: "Sergio Marconi"
+date: "10/27/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r reticulate}
+#test kld dimensionalyt reduction
+setwd("..")
+outdir_kld = "~/Documents/Data/Chapter3/plots/kld/"
+#get_kld_reduction(path_hsi, bands = 7, outdir = outdir)
+list_rasters <- list.files( "~/Documents/Data/Chapter3/plots/hsi/", recursive = F, full.names = T, pattern = ".tif")
+pblapply(list_rasters, get_kld_reduction, outdir=outdir_kld)
+
+```
+
+```{r reticulate}
+#test kld dimensionalyt reduction
+outdir = "~/Documents/Data/Chapter3/plots/decor/"
+setwd("..")
+#get_kld_reduction(path_hsi, bands = 7, outdir = outdir)
+list_rasters <- list.files( "~/Documents/Data/Chapter3/plots/mage/", recursive = F, full.names = T, pattern = ".tif")
+pblapply(list_rasters, decorrelation_stretch, outdir)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

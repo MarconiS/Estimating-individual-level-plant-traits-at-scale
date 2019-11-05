@@ -3,7 +3,7 @@ Type: Package
 Title: Collection of methods to predict leaf traits from hiperspectral imaging and leaf traits.
 Version: 0.1.0
 Author: Marconi Sergio
-Maintainer: The package maintainer <yourself@somewhere.net>
+Maintainer: sergio.marconi@weecology.org <yourself@somewhere.net>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
 License: MIT
@@ -12,6 +12,7 @@ LazyData: true
 Imports: 
     tidyverse,
     readr,
+    tsensembler,
     plsRglm,
     glmnet,
     raster,
@@ -24,7 +25,8 @@ Imports:
     boot,
     gnm,
     magrittr
-Remotes: github::NEONScience/NEON-geolocation/geoNEON
+Remotes: github::NEONScience/NEON-geolocation/geoNEON,
+    github::weecology/neonVstAop
 Suggests: 
     testthat (>= 2.1.0)
 RoxygenNote: 6.1.99.9001
