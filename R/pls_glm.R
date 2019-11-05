@@ -6,7 +6,7 @@
 #' @examples
 #' @importFrom magrittr "%>%"
 #' @import plsRglm
-pls_glm <- function(ll = NULL, trait = "N_pct", nrmlz=T){
+pls_glm <- function(ll = NULL, trait = "N_pct", nrmlz=F){
     #get traits data
     cr.Traits <- readr::read_csv(paste("./indir/Traits/CrownTraits.csv",sep=""))
 
@@ -63,6 +63,6 @@ pls_glm <- function(ll = NULL, trait = "N_pct", nrmlz=T){
     out[["pred"]] <- predict(mod,newdata=X.tst,
                              type="response",comps=as.integer(out["ncomp"]))
     out[["mod"]] <- mod
-    saveRDS(out, paste("./outdir/snaps/pls_glm_", ll, ".rds", sep=""))
+    saveRDS(out, paste("./outdir/PBMs/pls_glm_", trait, ll, ".rds", sep=""))
   return(out)
 }
