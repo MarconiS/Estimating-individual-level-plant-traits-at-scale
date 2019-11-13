@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ## R Markdown
@@ -21,7 +21,7 @@ setwd("..")
 outdir_kld = "~/Documents/Data/Chapter3/plots/kld/"
 #get_kld_reduction(path_hsi, bands = 7, outdir = outdir)
 list_rasters <- list.files( "~/Documents/Data/Chapter3/plots/hsi/", recursive = F, full.names = T, pattern = ".tif")
-pblapply(list_rasters, get_kld_reduction, outdir=outdir_kld)
+pblapply(list_rasters, get_preset_kdl, outdir=outdir_kld)
 
 ```
 

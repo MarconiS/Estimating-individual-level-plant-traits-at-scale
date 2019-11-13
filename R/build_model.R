@@ -13,6 +13,8 @@ build_model <- function(loop=1,  nrmlz = F, trait = "N_pct"){
     get_random_bags(lp = loop)
   }
   # run the pls glm on training bags for each random extractions
-  random_bag_pls <- pls_glm(trait = trait,
-                 ll = loop, nrmlz = nrmlz)
+  for(tr in trait){
+    random_bag_pls <- pls_glm(trait = tr,
+                              ll = loop, nrmlz = nrmlz)
+  }
 }
