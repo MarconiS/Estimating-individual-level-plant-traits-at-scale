@@ -44,7 +44,7 @@ pls_glm <- function(ll = NULL, trait = "N_pct", nrmlz=F){
     #perform a cross-valiadation on train-validation set
     train.PLS<- plsRglm::cv.plsRglm(dataY=(Y),dataX=X,
                            nt=15,NK=1, K=10,
-                           modele="pls-glm-family",family=gaussian())#, verbose = F)
+                           modele="pls-glm-family",family=gaussian(), verbose = F)
     out <- list()
     #define number of components to chose by calculating PRESS statistics
     press <- unlist(plsRglm::kfolds2Press(train.PLS))
@@ -59,10 +59,13 @@ pls_glm <- function(ll = NULL, trait = "N_pct", nrmlz=F){
       X.ntst <-t(diff(t(log(X.tst[,-c(1:nsites)])),differences=1, lag=3))
       X.tst <- cbind(X.tst[,c(1:nsites)], X.ntst)
     }
+    if(nsites==1){
+      X.tst = X.tst[,-1]
+    }
 
     #store validation metrics
     Y.test <- as.vector(test.data[,names(test.data) %in% trait])
-    out[["pred"]] <- predict(mod,newdata=X.tst,
+    out[["pred"]] <- predict(mod, newdata=X.tst,
                              type="response",comps=as.integer(out["ncomp"]))
     out[["mod"]] <- mod
     saveRDS(out, paste("./outdir/PBMs/pls_glm_", trait, ll, ".rds", sep=""))
