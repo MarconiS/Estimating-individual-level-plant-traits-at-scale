@@ -6,9 +6,9 @@
 #' @examples
 #' @importFrom magrittr "%>%"
 #' @import Metrics
-pls_glm_performance <- function(trait = "N_pct", nbags = 5, normz=F){
+pls_glm_performance <- function(trait = "N_pct", nbags = 20, normz=F){
   #retrieve number of snaps
-  loops <- list.files("./outdir/PBMs", pattern = ".rds", full.names = T)
+  loops <- list.files("./outdir/PBMs", pattern = trait, full.names = T)
 
   #check if Ensemble model has been created yet
   model_stack <- file.exists(paste("./outdir/EPBMs/", trait, ".rds", sep=""))
@@ -19,15 +19,23 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 5, normz=F){
     model_stack <- NULL
     for(bb in 1: length(mod.aic)){
       foo <- readRDS(loops[bb])
-      mod.aic[bb] <- foo$mod$AIC[foo$ncomp]
+      mod.aic[bb] <- foo$mod$FinalModel$aic
       #create model stack with all random bags models
-      model_stack[[bb]] <-foo
+      #model_stack[[bb]] <-foo
     }
     #subset the best n models to be used for performance
     mask <- cbind(which(mod.aic %in% head(sort(mod.aic), nbags)),
                   mod.aic[mod.aic %in% head(sort(mod.aic), nbags)])
+
+    model_stack <- NULL
+    i=0
+    for(bb in mask[,1]){
+      i=i+1
+      foo <- readRDS(loops[bb])
+      model_stack[[i]] <-foo
+    }
     #save the model ensemble in an R object
-    model_stack <- model_stack[mask[,1]]
+    #model_stack <- model_stack[mask[,1]]
     saveRDS(model_stack,
             file = paste("./outdir/EPBMs/", trait, ".rds", sep=""))
   }else{
@@ -39,7 +47,7 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 5, normz=F){
     mod.aic[bb] <- model_stack[[bb]]$mod$FinalModel$aic
   }
   mod.aic <- scale(mod.aic)
-  delta.aic <- mod.aic[,1] - min(mod.aic)
+  delta.aic <- mod.aic - min(mod.aic)
   weights <- tsensembler::softmax(-0.5*delta.aic)
 
   #get response for training crowns
@@ -51,7 +59,7 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 5, normz=F){
     dplyr::select(c("individualID", trait, "siteID"))
 
   nsites <- length(unique(test.data.y["siteID"]))
-  test.data.x <- read.csv("./indir/Tests/CrownSpectra_outBag.csv")
+  test.data.x <- read.csv("./indir/Tests/CrownPix_outBag_new.csv")
   crownID = test.data.x["individualID"]
   test.data.x <- dplyr::select(test.data.x, colnames(foo$mod$dataX))
 
@@ -65,6 +73,7 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 5, normz=F){
   test.PLS = as.matrix(test.data.x)
 
   #initialize variabiles
+  rm(output)
   out <- list()
   pred.val.data <- list()
   output.daic =  output.up.daic = output.lw.daic =  crownID
@@ -75,8 +84,9 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 5, normz=F){
     optim.ncomps <- model_stack[[bb]]$ncomp
     #make predictions using the ith model
     ith_mod_prediction <- pls_glm_predict(pls.mod.train, newdata = test.PLS,
-                                          wt = pls.mod.train$FinalModel$weights,
+                                          wt = rep(1, nrow(test.PLS)),
                                           ncomp=optim.ncomps,  type='response')
+    ith_mod_prediction=ith_mod_prediction[]
     pred.val.data$fit <- ith_mod_prediction[,1]
     pred.val.data$upper <- ith_mod_prediction[,3]
     pred.val.data$lower <- ith_mod_prediction[,2]
@@ -88,9 +98,9 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 5, normz=F){
     output.lw.daic$yhat <- output.lw.daic$yhat + pred.val.data$lower * weights[bb]
     #you have then a vector of predicions whose legnth is sum(crID_i * pixels_i)
     if(!exists("output")){
-      output <- cbind(crownID, rep(bb, dim(test.data.x)[1]), as.vector(pred.val.data$fit))
+      output <- cbind.data.frame(crownID, rep(bb, dim(test.data.x)[1]), as.vector(pred.val.data$fit))
     }else{
-      output <- rbind(output, as.matrix(cbind(crownID, rep(bb, dim(test.data.x)[1]),
+      output <- rbind.data.frame(output, as.matrix(cbind(crownID, rep(bb, dim(test.data.x)[1]),
                                               as.vector(pred.val.data$fit))))
     }
   }
@@ -100,7 +110,7 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 5, normz=F){
   #compare pixel predicions with crowns
   output <- inner_join(output, test.data.y, by = "individualID")
   output.daic <- inner_join(output.daic, test.data.y, by = "individualID")
-  pbm_all <- 1 - sum((output$yhat - (output[[trait]]))^2) / sum((output[[trait]] - mean(output[[trait]]))^2)
+  pbm_all <- 1 - sum((as.numeric(output[["yhat"]]) - (output[[trait]]))^2) / sum((output[[trait]] - mean(output[[trait]]))^2)
   epbm_r2 <-  1 - sum((output.daic$yhat - (output.daic[[trait]]))^2) /
     sum((output.daic[[trait]] - mean(output.daic[[trait]]))^2)
 
@@ -112,10 +122,10 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 5, normz=F){
   ceam_r2 <-  1 - sum((crown.based.daic$yhat - (crown.based.daic[[trait]]))^2) /
     sum((crown.based.daic[[trait]] - mean(crown.based.daic[[trait]]))^2)
 
-  #calculation of RMSE
-  rmse_crown <- rmse(crown.based.daic[[trait]], crown.based.daic$yhat)
-  rmse_pix_ensamble <- rmse(output.daic[[trait]], output.daic$yhat)
-  rmse_pix <- rmse( output[[trait]], output$yhat)
+  # #calculation of RMSE
+  # rmse_crown <- rmse(crown.based.daic[[trait]], crown.based.daic$yhat)
+  # rmse_pix_ensamble <- rmse(output.daic[[trait]], output.daic$yhat)
+  # rmse_pix <- rmse( output[[trait]], output$yhat)
 
   #calculate probability intervals
   pix.up <- inner_join(output.up.daic, test.data.y, by = "individualID")
@@ -139,6 +149,7 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 5, normz=F){
                       y_95 = list(epbm = pix.up, ceam = cr.up),
                       y_5 = list(epbm = pix.lw, ceam = cr.lw),
                       r2 = list(pbm = pbm_all, epbm = epbm_r2, ceam = ceam_r2),
-                      rmse = list(pbm = rmse_pix, epbm = rmse_pix_ensamble, ceam = rmse_crown))
+                     #rmse = list(pbm = rmse_pix, epbm = rmse_pix_ensamble, ceam = rmse_crown)
+                      )
   return(test_results)
 }

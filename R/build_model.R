@@ -14,6 +14,7 @@ build_model <- function(loop=1,  nrmlz = F, trait = "N_pct"){
   }
   # run the pls glm on training bags for each random extractions
   for(tr in trait){
+    print(tr)
     random_bag_pls <- pls_glm(trait = tr,
                               ll = loop, nrmlz = nrmlz)
   }
