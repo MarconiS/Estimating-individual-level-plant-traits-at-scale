@@ -4,7 +4,7 @@
 \alias{pls_glm_performance}
 \title{retrieve vegetation structure data  from NEON}
 \usage{
-pls_glm_performance(trait = "N_pct", nbags = 5, normz = F)
+pls_glm_performance(trait = "N_pct", nbags = 20, normz = F)
 }
 \value{
 
