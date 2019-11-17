@@ -67,6 +67,8 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     Y.test <- as.vector(test.data[,names(test.data) %in% trait])
     out[["pred"]] <- predict(mod, newdata=X.tst,
                              type="response",comps=as.integer(out["ncomp"]))
+    out[["pR2"]] <- 1 - sum((out[["pred"]] - (Y.test))^2) /
+      sum((Y.test - mean(Y.test))^2)
     out[["mod"]] <- mod
     saveRDS(out, paste("./outdir/PBMs/pls_glm_", trait, ll, ".rds", sep=""))
   return(out)
