@@ -6,7 +6,7 @@
 #' @examples
 #' @importFrom magrittr "%>%"
 build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
-                        , nrmlz = F, trait = c("N_pct", "C_pct", "P_pct", "LMA_g.m2")){
+                        , nrmlz = F, trait = c("Npercent", "LMA")){ # "Ppercent", "Cpercent",
   library(tidyverse)
   library(plsRglm)
   source("./R/clean_spectra.R")
@@ -19,9 +19,10 @@ build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
   spectra = read_csv(dat_pt)
   reduced_spectra = clean_spectra(spectra, ndvi = 0.5, nir = 0.2, outlier = F)
   spectra = cbind.data.frame(spectra[reduced_spectra$good_pix, 1:2], reduced_spectra$refl)
-
+  spectra_ave = spectra %>% group_by(individualID) %>% summarize_if(is.numeric, mean)
   #are random combinations of pixels already set up?
-  combinations <- file.exists(paste('./indir/Permutations/onePix1Crown_', loop, ".csv", sep=""))
+  #combinations <- file.exists(paste('./indir/Permutations/onePix1Crown_', loop, ".csv", sep=""))
+
   if(!combinations){
     #extract n combinations of pixles by extracting one per bag
     get_random_bags(spectra, lp = loop)
