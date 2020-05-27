@@ -5,3 +5,5 @@
 .DS_Store
 *.csv
 *.csv
+*.rds
+*.tif

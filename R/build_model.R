@@ -6,7 +6,7 @@
 #' @examples
 #' @importFrom magrittr "%>%"
 build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
-                        , nrmlz = F, trait = c("Npercent", "LMA")){ # "Ppercent", "Cpercent",
+                        , nrmlz = T, trait = c("Ppercent")){ # "Ppercent", "Cpercent",
   library(tidyverse)
   library(plsRglm)
   source("./R/clean_spectra.R")
