@@ -22,7 +22,7 @@ build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
   spectra_ave = spectra %>% group_by(individualID) %>% summarize_if(is.numeric, mean)
   #are random combinations of pixels already set up?
   #combinations <- file.exists(paste('./indir/Permutations/onePix1Crown_', loop, ".csv", sep=""))
-
+  combinations = F
   if(!combinations){
     #extract n combinations of pixles by extracting one per bag
     get_random_bags(spectra, lp = loop)
