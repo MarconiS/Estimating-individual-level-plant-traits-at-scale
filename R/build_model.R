@@ -5,8 +5,8 @@
 #' @export
 #' @examples
 #' @importFrom magrittr "%>%"
-build_model <- function(dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
-                        ,loop=1,  nrmlz = F, trait = c("N_pct", "C_pct", "P_pct", "LMA_g.m2")){
+build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
+                        , nrmlz = F, trait = c("N_pct", "C_pct", "P_pct", "LMA_g.m2")){
   library(tidyverse)
   library(plsRglm)
   source("./R/clean_spectra.R")

@@ -9,10 +9,17 @@
 pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     #get traits data
     cr.Traits <- readr::read_csv(paste("./indir/Traits/Chapter1_field_data.csv",sep=""))
-
+    test_ids = c(260,363, 2185, 2180, 2130, 2159, 2135,
+                 369, 2122, 2172, 2173, 2173,93, 2174,  196, 2131,
+                 319, 2150, 2231,  327,  201, 2179, 2110, 2105,
+                 344,  374, 2126,  331,  347)
+      #cr.Traits %>% filter(individualID %in% spectra$individualID) %>% group_by(taxonID, SITE)%>%
+     # sample_frac(0.2)
     #get random flip spectra data
-    aug.spectra <- readr::read_csv(paste('./indir/Permutations/onePix1Crown_', ll, '.csv', sep = ''))
+    #aug.spectra <- readr::read_csv(paste('./indir/Permutations/onePix1Crown_', ll, '.csv', sep = ''))
+    aug.spectra = spectra_ave
     aug.spectra <- merge(cr.Traits, aug.spectra, by = "individualID")
+    aug.spectra = aug.spectra %>% filter(!individualID %in% test_ids)
     tmp_features<- aug.spectra[grepl("band", names(aug.spectra))]
     tmp_variables <- aug.spectra[names(aug.spectra) %in% trait]
     tmp_variables <- (round(tmp_variables,3))
@@ -45,7 +52,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
       X = X[,-1]
     }
     #perform a cross-valiadation on train-validation set
-    train.PLS<- plsRglm::cv.plsRglm(dataY=log(Y),dataX=X, scaleY = T,
+    train.PLS<- plsRglm::cv.plsRglm(dataY=(Y),dataX=X, scaleY = T,
                                     nt=15,NK=1, K=5,
                                     modele="pls-glm-family",family=gaussian())
     out <- list()
@@ -54,7 +61,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     out["ncomp"] = which(press == min(press))
 
     # retrain on chosen number of components
-    mod <- plsRglm::plsRglm(dataY=log(Y),dataX=X,as.integer(out["ncomp"]), scaleY = T,
+    mod <- plsRglm::plsRglm(dataY=(Y),dataX=X,as.integer(out["ncomp"]), scaleY = T,
                             modele="pls-glm-family",family=gaussian())
     X.tst <- as.matrix(test.data[grepl("band", names(test.data))])
     X.tst[X.tst==0] = 0.0000001
@@ -68,7 +75,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
 
     #store validation metrics
     Y.test <- as.vector(test.data[,names(test.data) %in% trait])
-    out[["pred"]] <- exp(predict(mod, newdata=X.tst,
+    out[["pred"]] <- (predict(mod, newdata=X.tst,
                              type="response",comps=as.integer(out["ncomp"])))
     out[["pR2"]] <- 1 - sum((out[["pred"]] - (Y.test))^2) /
       sum((Y.test - mean(Y.test))^2)
