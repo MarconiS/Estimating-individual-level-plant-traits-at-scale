@@ -20,6 +20,8 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 20, normz=F){
     for(bb in 1: length(mod.aic)){
       foo <- readRDS(loops[bb])
       mod.aic[bb] <- foo$mod$FinalModel$aic
+      mod.aic[bb] <- - foo$pR2
+
       #create model stack with all random bags models
       #model_stack[[bb]] <-foo
     }
@@ -44,7 +46,7 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 20, normz=F){
   # calculate, scale the dAIC to rank and weight each model using a softmax function
   mod.aic=rep(0,length(model_stack))
   for(bb in 1: length(model_stack)){
-    mod.aic[bb] <- model_stack[[bb]]$mod$FinalModel$aic
+    mod.aic[bb] <- -model_stack[[bb]]$pR2
   }
   mod.aic <- scale(mod.aic)
   delta.aic <- mod.aic - min(mod.aic)
@@ -53,15 +55,21 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 20, normz=F){
   #get response for training crowns
   train.data.y <- read.csv("./indir/Traits/CrownTraits.csv") %>%
     dplyr::select(c("individualID", trait))
+  #just_for_cat
 
   #cleaning out of bag test Y and X
   test.data.y <- read.csv("./indir/Tests/CrownTraits_outBag.csv") %>%
     dplyr::select(c("individualID", trait, "siteID"))
 
-  nsites <- length(unique(test.data.y["siteID"]))
+  bnd_site <- test.data.y[["siteID"]] %>% factor(levels = c("JERC","OSBS","TALL")) %>% fastDummies::dummy_cols()
+  colnames(bnd_site) <- stringr::str_replace(colnames(bnd_site), ".data_", "band_")
+
   test.data.x <- read.csv("./indir/Tests/CrownPix_outBag_new.csv")
+  test.data.x <- cbind(test.data.x, bnd_site, bnd_site)
+  test.data.x <- test.data.x[-375]
+
   crownID = test.data.x["individualID"]
-  test.data.x <- dplyr::select(test.data.x, colnames(foo$mod$dataX))
+  test.data.x <- dplyr::select(test.data.x, colnames(model_stack[[1]]$mod$dataX))
 
   #transform features to mirror train features structure
   test.data.x=test.data.x[, colSums(is.na(test.data.x)) == 0]

@@ -4,11 +4,7 @@
 #' @return
 #' @export
 #' @examples get_random_bags(1000)
-get_random_bags<- function(lp = 1, seed = 1987){
-  #get dataset paths
-  data_path = list.files("./indir/Spectra/", pattern = ".csv", full.names = T)
-  # Read data
-  allData=read_csv(data_path)
+get_random_bags<- function(allData, lp = 1, seed = 1987){
 
   unqCrown = unique(allData["individualID"])
   #get number of individual crowns
