@@ -22,7 +22,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
      # sample_frac(0.2)
     #get random flip spectra data
     aug.spectra <- readr::read_csv(paste('./indir/Permutations/onePix1Crown_', ll, '.csv', sep = ''))
-    aug.spectra = spectra_ave
+    #aug.spectra = spectra_ave
     aug.spectra <- inner_join(cr.Traits, aug.spectra, by = "individualID")
     aug.spectra = aug.spectra %>% filter(!individualID %in% test_ids)
     tmp_features<- aug.spectra[grepl("band", names(aug.spectra))]
