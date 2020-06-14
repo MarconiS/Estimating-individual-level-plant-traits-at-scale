@@ -6,8 +6,14 @@
 #' @examples
 #' @importFrom magrittr "%>%"
 #' @import Metrics
-pls_glm_performance <- function(trait = "N_pct", nbags = 20, normz=F){
+pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
   #retrieve number of snaps
+  softmax <- function(x) {
+    x <- x[!is.na(x)]
+
+    exp(x) / sum(exp(x))
+  }
+
   loops <- list.files("./outdir/PBMs", pattern = trait, full.names = T)
 
   #check if Ensemble model has been created yet
@@ -48,30 +54,44 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 20, normz=F){
   for(bb in 1: length(model_stack)){
     mod.aic[bb] <- -model_stack[[bb]]$pR2
   }
-  mod.aic <- scale(mod.aic)
+  selected_mods = which(mod.aic %in% sort(mod.aic, decreasing = F)[1:nbags])
+  mod.aic <- scale(mod.aic[selected_mods])
   delta.aic <- mod.aic - min(mod.aic)
-  weights <- tsensembler::softmax(-0.5*delta.aic)
+  weights <- softmax(-0.5*delta.aic)
 
   #get response for training crowns
-  train.data.y <- read.csv("./indir/Traits/CrownTraits.csv") %>%
+  train.data.y <- read.csv("./indir/Traits/Chapter1_field_data.csv") %>%
     dplyr::select(c("individualID", trait))
   #just_for_cat
 
+  #get OOB data crowns
+  oob = c(260,363, 2185, 2180, 2130, 2159, 2135,
+                     369, 2122, 2172, 2173, 2173,93, 2174,  196, 2131,
+                     319, 2150, 2231,  327,  201, 2179, 2110, 2105,
+                     344,  374, 2126,  331,  347)
   #cleaning out of bag test Y and X
-  test.data.y <- read.csv("./indir/Tests/CrownTraits_outBag.csv") %>%
-    dplyr::select(c("individualID", trait, "siteID"))
+  test.data.y <- read.csv("./indir/Traits/Chapter1_field_data.csv") %>%
+    filter(individualID %in% oob) %>%
+    dplyr::select(c("individualID", trait, "SITE")) %>%
+    group_by(individualID)%>%
+    summarize_if(is.numeric, mean)
+  test.data.x <- read.csv("./indir/Tests/spectra_oob.csv") %>%
+    filter(individualID %in% oob)
 
-  bnd_site <- test.data.y[["siteID"]] %>% factor(levels = c("JERC","OSBS","TALL")) %>% fastDummies::dummy_cols()
+  aug.mat = inner_join(test.data.x, test.data.y)
+  tmp_features<- aug.mat[grepl("band", names(aug.mat))]
+  tmp_variables <- aug.mat[names(aug.mat) %in% trait]
+  tmp_variables <- (round(tmp_variables,3))
+  bnd_site <- test.data.x[["band_site"]] %>% factor %>% fastDummies::dummy_cols()
   colnames(bnd_site) <- stringr::str_replace(colnames(bnd_site), ".data_", "band_")
+  test.data.x <- cbind.data.frame(bnd_site[-1], tmp_features[-1], tmp_variables)
+  test.data.x <- test.data.x[-354]
 
-  test.data.x <- read.csv("./indir/Tests/CrownPix_outBag_new.csv")
-  test.data.x <- cbind(test.data.x, bnd_site, bnd_site)
-  test.data.x <- test.data.x[-375]
-
-  crownID = test.data.x["individualID"]
+  crownID = aug.mat["individualID"]
+  colnames(test.data.x)[1:2] = c("band_OSBS", "band_TALL")
   test.data.x <- dplyr::select(test.data.x, colnames(model_stack[[1]]$mod$dataX))
-
   #transform features to mirror train features structure
+  test.data.x[test.data.x==0] = 0.0000001
   test.data.x=test.data.x[, colSums(is.na(test.data.x)) == 0]
   if(normz==T){
     foot <-t(diff(t(log(test.data.x[,-c(1:nsites)])),differences=1, lag=3))
@@ -88,13 +108,14 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 20, normz=F){
   output.daic$yhat = output.up.daic$yhat = output.lw.daic$yhat =0
 
   for(bb in 1:length(weights)){
-    pls.mod.train <- model_stack[[bb]]$mod
-    optim.ncomps <- model_stack[[bb]]$ncomp
+    md = selected_mods[bb]
+    pls.mod.train <- model_stack[[md]]$mod
+    optim.ncomps <- model_stack[[md]]$ncomp
     #make predictions using the ith model
     ith_mod_prediction <- pls_glm_predict(pls.mod.train, newdata = test.PLS,
                                           wt = rep(1, nrow(test.PLS)),
                                           ncomp=optim.ncomps,  type='response')
-    ith_mod_prediction=ith_mod_prediction[]
+    ith_mod_prediction=exp(ith_mod_prediction[])
     pred.val.data$fit <- ith_mod_prediction[,1]
     pred.val.data$upper <- ith_mod_prediction[,3]
     pred.val.data$lower <- ith_mod_prediction[,2]

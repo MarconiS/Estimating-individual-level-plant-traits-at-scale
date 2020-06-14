@@ -1,13 +1,13 @@
-clean_spectra <- function(brick, ndvi = 0.5, nir = 0.2, outlier = F){
+clean_spectra <- function(brick, ndvi = 0.5, nir = 0.25, outlier = F){
   # filter for no data
-  mask = brick > 1
-  brick[mask] <-  NA
-  mask = brick == -9999
-  brick[mask] <-  NA
+
+  mask1 = apply(brick[3:371], 1, function(x)all(x>0))
+  mask2 = apply(brick[3:371], 1, function(x)all(x<1))
+  brick[!as.logical(mask1 *mask2), ] = NA
 
   #filter for greennes and shadows
   ndvi <- (brick[,"band_90"]- brick[,"band_58"])/(brick[,"band_58"] + brick[,"band_90"]) <ndvi
-  nir860 <- (brick[,"band_96"] + brick[,"band_97"])/2 < 0.2
+  nir860 <- (brick[,"band_96"] + brick[,"band_97"])/2 < nir
   mask = as.logical(ndvi | nir860)
   mask[is.na(mask)] = T
   brick[mask,] = NA

@@ -7,8 +7,13 @@
 #' @importFrom magrittr "%>%"
 #' @import plsRglm
 pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
+
+    wrangle = function(x){
+      ifelse(is.character(x), x[1], mean(x))
+    }
     #get traits data
     cr.Traits <- readr::read_csv(paste("./indir/Traits/Chapter1_field_data.csv",sep=""))
+    cr.Traits = cr.Traits %>% group_by(individualID) %>% summarize_all(wrangle)
     test_ids = c(260,363, 2185, 2180, 2130, 2159, 2135,
                  369, 2122, 2172, 2173, 2173,93, 2174,  196, 2131,
                  319, 2150, 2231,  327,  201, 2179, 2110, 2105,
@@ -17,8 +22,8 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
      # sample_frac(0.2)
     #get random flip spectra data
     aug.spectra <- readr::read_csv(paste('./indir/Permutations/onePix1Crown_', ll, '.csv', sep = ''))
-    #aug.spectra = spectra_ave
-    aug.spectra <- merge(cr.Traits, aug.spectra, by = "individualID")
+    aug.spectra = spectra_ave
+    aug.spectra <- inner_join(cr.Traits, aug.spectra, by = "individualID")
     aug.spectra = aug.spectra %>% filter(!individualID %in% test_ids)
     tmp_features<- aug.spectra[grepl("band", names(aug.spectra))]
     tmp_variables <- aug.spectra[names(aug.spectra) %in% trait]
@@ -38,7 +43,6 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     test.data= test.data %>% select(-one_of("band_site"))
 
     X <- as.matrix(train.data[grepl("band", names(train.data))])
-    X[X==0] = 0.0000001
     #responses matrix
     Y <- as.vector(train.data[,names(train.data) %in% trait])
     #K=nrow(Y)
@@ -64,7 +68,6 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     mod <- plsRglm::plsRglm(dataY=log(Y),dataX=X,as.integer(out["ncomp"]), scaleY = T,
                             modele="pls-glm-family",family=gaussian())
     X.tst <- as.matrix(test.data[grepl("band", names(test.data))])
-    X.tst[X.tst==0] = 0.0000001
     if(nrmlz==T){
       X.ntst <-t(diff(t((X.tst[,-c(1:nsites)])),differences=1, lag=3))
       X.tst <- cbind(X.tst[,c(1:nsites)], X.ntst)
