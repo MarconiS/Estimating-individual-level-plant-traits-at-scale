@@ -1,12 +1,7 @@
-#' retrieve vegetation structure data  from NEON
-#'
-#'
-#' @return
-#' @export
-#' @examples
-#' @importFrom magrittr "%>%"
+#!/bin/bash
 build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
-                        , nrmlz = F, trait = c("Npercent")){ # "Ppercent", "Cpercent",
+                        , nrmlz = F,
+                        trait = c("Npercent", "LMA", "Ppercent", "Cpercent")){
   library(tidyverse)
   library(plsRglm)
   source("./R/clean_spectra.R")
@@ -26,9 +21,18 @@ build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
   combinations <- file.exists(paste('./indir/Permutations/onePix1Crown_', loop, ".csv", sep=""))
   #fprint(trait, loop, nrmlz)
   #if(!combinations){
-    #extract n combinations of pixles by extracting one per bag
-    get_random_bags(spectra, lp = loop)
+  #extract n combinations of pixles by extracting one per bag
+  get_random_bags(spectra, lp = loop)
   #}
   # run the pls glm on training bags for each random extractions
-  random_bag_pls <- pls_glm(trait = trait, ll = loop, nrmlz = nrmlz)
+  for(trait in tr){
+    random_bag_pls <- pls_glm(trait = trait, ll = loop, nrmlz = nrmlz)
+  }
 }
+
+2
+3
+
+args <- commandArgs()
+print(args)
+build_model(loop=args[6])
