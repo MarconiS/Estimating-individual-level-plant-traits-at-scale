@@ -5,7 +5,7 @@
 #SBATCH --qos=ewhite-b
 
 #SBATCH --cpus-per-task=1            # Number of cores per MPI rank
-#SBATCH --mem=1
+#SBATCH --mem=2Gb
 
 #SBATCH --time=2:00:00       #Time limit hrs:min:sec
 #SBATCH --output=plamBuild.out   # Standard output and error log
