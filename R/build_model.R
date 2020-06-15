@@ -1,7 +1,7 @@
 #!/bin/bash
 build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
                         , nrmlz = F,
-                        trait = c("Npercent", "LMA", "Ppercent", "Cpercent")){
+                        tr = c("Npercent", "LMA", "Ppercent", "Cpercent")){
   library(tidyverse)
   library(plsRglm)
   source("./R/clean_spectra.R")
@@ -30,9 +30,7 @@ build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
   }
 }
 
-2
-3
 
 args <- commandArgs()
 print(args)
-build_model(loop=args[6])
+build_model(loop=as.integer(args[6]))
