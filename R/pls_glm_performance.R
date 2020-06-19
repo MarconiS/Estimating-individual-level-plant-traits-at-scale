@@ -26,8 +26,7 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
     for(bb in 1: length(mod.aic)){
       foo <- readRDS(loops[bb])
       mod.aic[bb] <- foo$mod$FinalModel$aic
-      mod.aic[bb] <- - foo$pR2
-
+      #mod.aic[bb] <- - foo$pR2
       #create model stack with all random bags models
       #model_stack[[bb]] <-foo
     }
@@ -49,10 +48,14 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
   }else{
     model_stack <- readRDS(paste("./outdir/EPBMs/", trait, ".rds", sep=""))
   }
+
+
+
+
   # calculate, scale the dAIC to rank and weight each model using a softmax function
   mod.aic=rep(0,length(model_stack))
   for(bb in 1: length(model_stack)){
-    mod.aic[bb] <- -model_stack[[bb]]$pR2
+    mod.aic[bb] <- model_stack[[bb]]$mod$FinalModel$aic
   }
   selected_mods = which(mod.aic %in% sort(mod.aic, decreasing = F)[1:nbags])
   mod.aic <- scale(mod.aic[selected_mods])
@@ -68,7 +71,7 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
   oob = c(260,363, 2185, 2180, 2130, 2159, 2135,
                      369, 2122, 2172, 2173, 2173,93, 2174,  196, 2131,
                      319, 2150, 2231,  327,  201, 2179, 2110, 2105,
-                     344,  374, 2126,  331,  347)
+                     344,  374, 331,  347)
   #cleaning out of bag test Y and X
   test.data.y <- read.csv("./indir/Traits/Chapter1_field_data.csv") %>%
     filter(individualID %in% oob) %>%
@@ -91,12 +94,12 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
   colnames(test.data.x)[1:2] = c("band_OSBS", "band_TALL")
   test.data.x <- dplyr::select(test.data.x, colnames(model_stack[[1]]$mod$dataX))
   #transform features to mirror train features structure
-  test.data.x[test.data.x==0] = 0.0000001
+  #test.data.x[test.data.x==0] = 0.0000001
   test.data.x=test.data.x[, colSums(is.na(test.data.x)) == 0]
-  if(normz==T){
-    foot <-t(diff(t(log(test.data.x[,-c(1:nsites)])),differences=1, lag=3))
-    test.data.x <- cbind(test.data.x[,c(1:nsites)], foot)
-  }
+  # if(normz==T){
+  #   foot <-t(diff(t(log(test.data.x[,-c(1:nsites)])),differences=1, lag=3))
+  #   test.data.x <- cbind(test.data.x[,c(1:nsites)], foot)
+  # }
 
   test.PLS = as.matrix(test.data.x)
 
@@ -115,7 +118,7 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
     ith_mod_prediction <- pls_glm_predict(pls.mod.train, newdata = test.PLS,
                                           wt = rep(1, nrow(test.PLS)),
                                           ncomp=optim.ncomps,  type='response')
-    ith_mod_prediction=exp(ith_mod_prediction[])
+    ith_mod_prediction=exp(ith_mod_prediction)
     pred.val.data$fit <- ith_mod_prediction[,1]
     pred.val.data$upper <- ith_mod_prediction[,3]
     pred.val.data$lower <- ith_mod_prediction[,2]

@@ -14,10 +14,9 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     #get traits data
     cr.Traits <- readr::read_csv(paste("./indir/Traits/Chapter1_field_data.csv",sep=""))
     cr.Traits = cr.Traits %>% group_by(individualID) %>% summarize_all(wrangle)
-    test_ids = c(260,363, 2185, 2180, 2130, 2159, 2135,
-                 369, 2122, 2172, 2173, 2173,93, 2174,  196, 2131,
-                 319, 2150, 2231,  327,  201, 2179, 2110, 2105,
-                 344,  374, 2126,  331,  347)
+    train_ids = readr::read_csv("./indir/Misc/train_ids.csv")
+    calib_ids = readr::read_csv("./indir/Misc/calibration_ids.csv")
+    test_ids = readr::read_csv("./indir/Misc/oob_ids.csv")
       #cr.Traits %>% filter(individualID %in% spectra$individualID) %>% group_by(taxonID, SITE)%>%
      # sample_frac(0.2)
     #get random flip spectra data
@@ -27,17 +26,19 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     aug.spectra = aug.spectra %>% filter(!individualID %in% test_ids)
     tmp_features<- aug.spectra[grepl("band", names(aug.spectra))]
     tmp_variables <- aug.spectra[names(aug.spectra) %in% trait]
-    tmp_variables <- (round(tmp_variables,3))
+    tmp_variables <- (round(tmp_variables,2))
     bnd_site <- aug.spectra[["SITE"]] %>% factor %>% fastDummies::dummy_cols()
     colnames(bnd_site) <- stringr::str_replace(colnames(bnd_site), ".data_", "band_")
-    aug.X <- data.frame(aug.spectra["taxonID"], bnd_site[-1], tmp_features, tmp_variables)
-    aug.X = aug.X[complete.cases(aug.X),]
+    aug.spectra <- data.frame(aug.spectra["individualID"], aug.spectra["taxonID"], bnd_site[-1], tmp_features, tmp_variables)
+    aug.spectra = aug.spectra[complete.cases(aug.spectra),]
     # Subset data into cal/val by site
-    eval.set <- cut_set(aug.X, c.id = aug.spectra[["individualID"]])
-    train.data <- eval.set$train
-    test.data <- eval.set$test
-    colnames(train.data)[1] <- "taxonID"
-    colnames(test.data)[1] <- "taxonID"
+    train.data = aug.spectra %>% filter(!individualID %in% calib_ids$calib_id)
+    test.data = aug.spectra %>% filter(individualID %in% calib_ids$calib_id)
+    #eval.set <- cut_set(aug.X, c.id = aug.spectra[["individualID"]])
+    #train.data <- eval.set$train
+    #test.data <- eval.set$test
+    #colnames(train.data)[1] <- "taxonID"
+    #colnames(test.data)[1] <- "taxonID"
     #predictors matrix
     train.data= train.data %>% select(-one_of("band_site"))
     test.data= test.data %>% select(-one_of("band_site"))
@@ -47,11 +48,11 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     Y <- as.vector(train.data[,names(train.data) %in% trait])
     #K=nrow(Y)
     #get sites and set up sites fixed effects
-    nsites <- nrow(unique(aug.spectra["SITE"]))
-    if(nrmlz==T){
-      X.n <- t(diff(t((X[,-c(1:nsites)])),differences=1, lag=3))
-      X <- cbind(X[,c(1:nsites)], X.n)
-    }
+    nsites <- nrow(unique(aug.spectra["band_site"]))
+    # if(nrmlz==T){
+    #   X.n <- t(diff(t((X[,-c(1:nsites)])),differences=1, lag=3))
+    #   X <- cbind(X[,c(1:nsites)], X.n)
+    # }
     if(nsites==1){
       X = X[,-1]
     }
@@ -68,10 +69,10 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     mod <- plsRglm::plsRglm(dataY=log(Y),dataX=X,as.integer(out["ncomp"]), scaleY = T,
                             modele="pls-glm-family",family=gaussian())
     X.tst <- as.matrix(test.data[grepl("band", names(test.data))])
-    if(nrmlz==T){
-      X.ntst <-t(diff(t((X.tst[,-c(1:nsites)])),differences=1, lag=3))
-      X.tst <- cbind(X.tst[,c(1:nsites)], X.ntst)
-    }
+    # if(nrmlz==T){
+    #   X.ntst <-t(diff(t((X.tst[,-c(1:nsites)])),differences=1, lag=3))
+    #   X.tst <- cbind(X.tst[,c(1:nsites)], X.ntst)
+    # }
     if(nsites==1){
       X.tst = X.tst[,-1]
     }
