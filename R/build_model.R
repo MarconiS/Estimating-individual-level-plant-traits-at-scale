@@ -1,5 +1,5 @@
 #!/bin/bash
-build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
+build_model <- function(loop=1, dat_pt = "./indir/Spectra/silva_spectra.csv"
                         #, nrmlz = F,
                         ,tr = c("Npercent", "LMA", "Ppercent", "Cpercent")){
   library(tidyverse)
@@ -17,8 +17,9 @@ build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
   reduced_spectra = clean_spectra(spectra, ndvi = 0.5, nir = 0.2, outlier = F)
   spectra = cbind.data.frame(spectra[reduced_spectra$good_pix, 1:2], reduced_spectra$refl)
   spectra_ave = spectra %>% group_by(individualID) %>% summarize_all(wrangle)
+  #all_spectra = readr::write_csv(spectra, "./indir/Spectra/reflectance_all.csv")
   #are random combinations of pixels already set up?
-  combinations <- file.exists(paste('./indir/Permutations/onePix1Crown_', loop, ".csv", sep=""))
+  #combinations <- file.exists(paste('./indir/Permutations/onePix1Crown_', loop, ".csv", sep=""))
   #fprint(trait, loop, nrmlz)
   #if(!combinations){
   #extract n combinations of pixles by extracting one per bag

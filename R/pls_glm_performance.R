@@ -14,6 +14,11 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
     exp(x) / sum(exp(x))
   }
 
+  rmse <- function(x_p, x_o){
+    ssd = sum((x_p - x_o)^2)
+    rmse = sqrt(ssd/length(x_o))
+  }
+
   loops <- list.files("./outdir/PBMs", pattern = trait, full.names = T)
 
   #check if Ensemble model has been created yet
@@ -22,17 +27,19 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
   if(!model_stack || length(model_stack) != nbags){
     #get delta_aic and rank best models
     mod.aic <- rep(NA, length(loops))
+    mod.r2 <- rep(NA, length(loops))
+
     model_stack <- NULL
     for(bb in 1: length(mod.aic)){
       foo <- readRDS(loops[bb])
       mod.aic[bb] <- foo$mod$FinalModel$aic
-      #mod.aic[bb] <- - foo$pR2
+      mod.r2[bb] <- - foo$pR2
       #create model stack with all random bags models
       #model_stack[[bb]] <-foo
     }
     #subset the best n models to be used for performance
-    mask <- cbind(which(mod.aic %in% head(sort(mod.aic), nbags)),
-                  mod.aic[mod.aic %in% head(sort(mod.aic), nbags)])
+    mask <- cbind(which(mod.r2 %in% head(sort(mod.r2), nbags)),
+                  mod.r2[mod.r2 %in% head(sort(mod.r2), nbags)])
 
     model_stack <- NULL
     i=0
@@ -54,10 +61,14 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
 
   # calculate, scale the dAIC to rank and weight each model using a softmax function
   mod.aic=rep(0,length(model_stack))
+  mod.r2=rep(0,length(model_stack))
   for(bb in 1: length(model_stack)){
     mod.aic[bb] <- model_stack[[bb]]$mod$FinalModel$aic
+    mod.r2[bb] <- -model_stack[[bb]]$pR2
+
   }
   selected_mods = which(mod.aic %in% sort(mod.aic, decreasing = F)[1:nbags])
+  #mod.aic = mod.r2
   mod.aic <- scale(mod.aic[selected_mods])
   delta.aic <- mod.aic - min(mod.aic)
   weights <- softmax(-0.5*delta.aic)
@@ -65,21 +76,18 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
   #get response for training crowns
   train.data.y <- read.csv("./indir/Traits/Chapter1_field_data.csv") %>%
     dplyr::select(c("individualID", trait))
-  #just_for_cat
+  #just_for_
 
   #get OOB data crowns
-  oob = c(260,363, 2185, 2180, 2130, 2159, 2135,
-                     369, 2122, 2172, 2173, 2173,93, 2174,  196, 2131,
-                     319, 2150, 2231,  327,  201, 2179, 2110, 2105,
-                     344,  374, 331,  347)
+  oob = readr::read_csv("./indir/Misc/oob_ids.csv")
   #cleaning out of bag test Y and X
   test.data.y <- read.csv("./indir/Traits/Chapter1_field_data.csv") %>%
-    filter(individualID %in% oob) %>%
+    filter(individualID %in% oob$test_id) %>%
     dplyr::select(c("individualID", trait, "SITE")) %>%
     group_by(individualID)%>%
     summarize_if(is.numeric, mean)
-  test.data.x <- read.csv("./indir/Tests/spectra_oob.csv") %>%
-    filter(individualID %in% oob)
+  test.data.x <- read.csv("./indir/Spectra/reflectance_all.csv") %>%
+    filter(individualID %in% oob$test_id)
 
   aug.mat = inner_join(test.data.x, test.data.y)
   tmp_features<- aug.mat[grepl("band", names(aug.mat))]
@@ -155,9 +163,9 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
     sum((crown.based.daic[[trait]] - mean(crown.based.daic[[trait]]))^2)
 
   # #calculation of RMSE
-  # rmse_crown <- rmse(crown.based.daic[[trait]], crown.based.daic$yhat)
-  # rmse_pix_ensamble <- rmse(output.daic[[trait]], output.daic$yhat)
-  # rmse_pix <- rmse( output[[trait]], output$yhat)
+  rmse_crown <- rmse(crown.based.daic[[trait]], crown.based.daic$yhat)
+  rmse_pix_ensamble <- rmse(output.daic[[trait]], output.daic$yhat)
+  rmse_pix <- rmse( output[[trait]], output$yhat)
 
   #calculate probability intervals
   pix.up <- inner_join(output.up.daic, test.data.y, by = "individualID")
@@ -180,8 +188,9 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
   test_results = list(y_hat = list(pbm = output$yhat, epbm = output.daic$yhat, ceam = crown.based.daic$yhat),
                       y_95 = list(epbm = pix.up, ceam = cr.up),
                       y_5 = list(epbm = pix.lw, ceam = cr.lw),
-                      r2 = list(pbm = pbm_all, epbm = epbm_r2, ceam = ceam_r2),
-                     #rmse = list(pbm = rmse_pix, epbm = rmse_pix_ensamble, ceam = rmse_crown)
+                      r2 = list(pbm = pbm_all, epbm = epbm_r2, ceam = ceam_r2)
+                     ,rmse = list(pbm = rmse_pix, epbm = rmse_pix_ensamble, ceam = rmse_crown)
                       )
+  saveRDS(test_results, paste("./outdir/performance_10_", trait, ".rds", sep=""))
   return(test_results)
 }
