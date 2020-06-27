@@ -56,6 +56,7 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
     model_stack <- readRDS(paste("./outdir/EPBMs/", trait, ".rds", sep=""))
   }
 
+#  model_stack <- readRDS(paste("./outdir/EPBMs/", trait, ".rds", sep=""))
 
 
 
@@ -185,7 +186,8 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
   cr.lw <- inner_join(cr.lw, test.data.y, by = "individualID")
   colnames(cr.lw) <- c("individualID", "y_lw", "y")
 
-  test_results = list(y_hat = list(pbm = output$yhat, epbm = output.daic$yhat, ceam = crown.based.daic$yhat),
+  test_results = list(y = list(pbm = output[,4], epbm = output.daic[,3], ceam = crown.based.daic[,3]),
+                      y_hat = list(pbm = output$yhat, epbm = output.daic$yhat, ceam = crown.based.daic$yhat),
                       y_95 = list(epbm = pix.up, ceam = cr.up),
                       y_5 = list(epbm = pix.lw, ceam = cr.lw),
                       r2 = list(pbm = pbm_all, epbm = epbm_r2, ceam = ceam_r2)
