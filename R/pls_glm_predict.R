@@ -6,8 +6,8 @@
 #' @examples
 #' @importFrom magrittr "%>%"
 pls_glm_predict <- function(object,newdata,
-      comps=object$computed_nt, type=c("link", "response", "terms", "scores", "class", "probs"),
-      se.fit=FALSE, wt = NULL, dispersion = NULL,methodNA="adaptative",verbose=TRUE,...)
+                            comps=object$computed_nt, type=c("link", "response", "terms", "scores", "class", "probs"),
+                            se.fit=FALSE, wt = NULL, dispersion = NULL,methodNA="adaptative",verbose=TRUE,...)
 {
   if (!inherits(object, "plsRglmmodel"))
     stop("Primary argument much be a plsRglmmodel object")
@@ -85,7 +85,14 @@ pls_glm_predict <- function(object,newdata,
       #}
       if (type=="terms"){return(predict(object$FinalModel,newdata=ttpred,type = "terms",se.fit=se.fit,dispersion = dispersion,...))
       }
-      if (type=="response"){return(predict.lm(object$FinalModel,newdata=ttpred,type = "response",se.fit=se.fit,interval = 'prediction',weights = wt, dispersion = dispersion,...))
+      if (type=="response"){y_hat = predict(object$FinalModel,
+                                    newdata=ttpred,type = "response",
+                                    se.fit=se.fit,interval = 'prediction',
+                                    weights = wt, dispersion = dispersion,...)
+        pred_int = HH::interval(object$FinalModel, newdata=ttpred, type="response")
+        pred_int = pred_int[,c(1,4,5)]
+        colnames(pred_int) = c("fit","lwr","upr")
+        return(pred_int[])
       }
     }
     if("polr" %in% class(object$FinalModel)){
@@ -96,3 +103,8 @@ pls_glm_predict <- function(object,newdata,
     return(ttpredY[,1:comps,drop=FALSE])}
   }
 }
+
+
+
+
+

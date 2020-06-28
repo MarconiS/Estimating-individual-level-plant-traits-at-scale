@@ -1,14 +1,14 @@
 clean_spectra <- function(brick, ndvi = 0.5, nir = 0.25, outlier = F){
   # filter for no data
-
-  mask1 = apply(brick[3:371], 1, function(x)all(x>0))
-  mask2 = apply(brick[3:371], 1, function(x)all(x<1))
+  brick = brick %>% select(contains("band"))
+  mask1 = apply(brick[,1:369], 1, function(x)all(x>0))
+  mask2 = apply(brick[,1:369], 1, function(x)all(x<1))
   brick[!as.logical(mask1 *mask2), ] = NA
 
   #filter for greennes and shadows
   ndvi <- (brick[,"band_90"]- brick[,"band_58"])/(brick[,"band_58"] + brick[,"band_90"]) <ndvi
   nir860 <- (brick[,"band_96"] + brick[,"band_97"])/2 < nir
-  mask = as.logical(ndvi | nir860)
+  mask = as.logical(ndvi * nir860)
   mask[is.na(mask)] = T
   brick[mask,] = NA
   rm(mask, ndvi, nir860)
@@ -19,10 +19,12 @@ clean_spectra <- function(brick, ndvi = 0.5, nir = 0.25, outlier = F){
   rm(normMat)
 
   #filter for known artifacts
-  cnd = (brick[,"band_312"] > 0.03)
-  cnd[is.na(cnd)] = T
-  #idx <- which(apply(cnd, 1, any))
-  brick[cnd,] = NA
+  cnd = (brick[,298] > 0.03)
+  idx <- (apply(cnd, 1, any))
+  if(length(idx) !=0){
+    idx[is.na(idx)] = T
+    brick[idx,] = NA
+  }
 
   cnd = (brick[,24:45] > 0.03)
   idx <- (apply(cnd, 1, any))

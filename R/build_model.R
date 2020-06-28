@@ -1,7 +1,7 @@
 #!/bin/bash
 build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
                         #, nrmlz = F,
-                        ,tr = c("Npercent", "LMA", "Ppercent", "Cpercent")){
+                        ,tr = c("Ppercent", "Cpercent")){
   library(tidyverse)
   library(plsRglm)
   source("./R/clean_spectra.R")
