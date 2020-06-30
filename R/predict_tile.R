@@ -3,7 +3,6 @@ library(tidyverse)
 library(raster)
 source("./R/fasRas_to_dt.R")
 source("./R/clean_spectra.R")
-source("")
 #retrieve number of snaps
 softmax <- function(x) {
   x <- x[!is.na(x)]
@@ -53,13 +52,21 @@ for(bb in 1:length(weights)){
   pls.mod.train <- model_stack[[md]]$mod
   optim.ncomps <- model_stack[[md]]$ncomp
   #make predictions using the ith model
-  # ith_mod_prediction <- pls_glm_predict(pls.mod.train, newdata = dat,
-  #                                       wt = rep(1, nrow(test.PLS)),
-  #                                       ncomp=optim.ncomps,  type='response')
-  ith_mod_prediction <- plsglm_fast_predict(pls.mod.train, newdata = dat,
-                                        wt = rep(1, nrow(test.PLS)),
-                                        ncomp=optim.ncomps,  type='response')
-  output.daic <-ith_mod_prediction * weights[bb]
+  newdata = dat
+  nrnd <- nrow(newdata)
+  newdata <- sweep(sweep(newdata, 2, attr(pls.mod.train$ExpliX, "scaled:center")),
+                   2, attr(pls.mod.train$ExpliX, "scaled:scale"), "/")
+  newdata <- as.matrix(newdata)
+
+  newdata = lapply(1:nrnd, function(x)c(newdata[x,] %*% pls.mod.train$wwetoile[, 1:optim.ncomps],
+                                        rep(0, pls.mod.train$computed_nt - optim.ncomps)))
+  newdata = do.call(rbind, newdata)
+  colnames(newdata) <- NULL
+  newdata <- data.frame(tt = newdata)
+  pred_int = HH::interval(pls.mod.train$FinalModel, newdata=newdata, type="response")
+  pred_int = pred_int[,c(1,4,5)]
+  colnames(pred_int) = c("fit","lwr","upr")
+  output.daic <-pred_int * weights[bb]
 }
 
 dat = matrix(NA, length(reduced_spectra), 3)
