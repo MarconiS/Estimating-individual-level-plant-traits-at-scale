@@ -51,7 +51,8 @@ pls_glm_predict <- function(object,newdata,
       mf <- eval(mf, parent.frame())
       mt <- attr(mf, "terms")
       #    attr(mt,"intercept")<-0L
-      newdata.frame <- if (!is.empty.model(mt)) model.matrix(mt, mf, contrasts)[,-1]
+      newdata.frame <-
+      if (!is.empty.model(mt)) model.matrix(mt, mf, contrasts)[,-1]
       else matrix(, nrnd, 0L)
       weights <- as.vector(model.weights(mf))
     } else {newdata.frame <- newdata}

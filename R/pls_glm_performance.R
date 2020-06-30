@@ -6,6 +6,29 @@
 #' @examples
 #' @importFrom magrittr "%>%"
 #' @import Metrics
+#'
+#'
+pls_glm_predict <- function(object,newdata,
+                                comps=object$computed_nt, type=c("link", "response", "terms", "scores", "class", "probs"),
+                                se.fit=FALSE, wt = NULL, dispersion = NULL,methodNA="adaptative",verbose=TRUE,...)
+{
+  nrnd <- nrow(newdata)
+  newdataNA <- !is.na(newdata)
+  newdata <- sweep(sweep(newdata, 2, attr(object$ExpliX, "scaled:center")),
+                   2, attr(object$ExpliX, "scaled:scale"), "/")
+  newdata <- as.matrix(newdata)
+  #newdata[!newdataNA] <- 0
+  newdata = lapply(1:nrnd, function(x)c(newdata[x,] %*% object$wwetoile[, 1:comps],
+                                        rep(0, object$computed_nt - comps)))
+  newdata = do.call(rbind, newdata)
+  colnames(newdata) <- NULL
+  newdata <- data.frame(tt = newdata)
+  pred_int = HH::interval(object$FinalModel, newdata=newdata, type="response")
+  pred_int = pred_int[,c(1,4,5)]
+  colnames(pred_int) = c("fit","lwr","upr")
+  return(pred_int[])
+}
+
 pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
   #retrieve number of snaps
   softmax <- function(x) {
@@ -51,9 +74,9 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
     #save the model ensemble in an R object
     #model_stack <- model_stack[mask[,1]]
     saveRDS(model_stack,
-            file = paste("./outdir/EPBMs/", trait, ".rds", sep=""))
+            file = paste("./outdir/EPBMs/1002", trait, ".rds", sep=""))
   }else{
-    model_stack <- readRDS(paste("./outdir/EPBMs/", trait, ".rds", sep=""))
+    model_stack <- readRDS(paste("./outdir/EPBMs/100", trait, ".rds", sep=""))
   }
 
 #  model_stack <- readRDS(paste("./outdir/EPBMs/", trait, ".rds", sep=""))
@@ -127,7 +150,7 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
     ith_mod_prediction <- pls_glm_predict(pls.mod.train, newdata = test.PLS,
                                           wt = rep(1, nrow(test.PLS)),
                                           ncomp=optim.ncomps,  type='response')
-    ith_mod_prediction=exp(ith_mod_prediction)
+    ith_mod_prediction=(ith_mod_prediction)
     pred.val.data$fit <- ith_mod_prediction[,1]
     pred.val.data$upper <- ith_mod_prediction[,3]
     pred.val.data$lower <- ith_mod_prediction[,2]
@@ -193,6 +216,6 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
                       r2 = list(pbm = pbm_all, epbm = epbm_r2, ceam = ceam_r2)
                      ,rmse = list(pbm = rmse_pix, epbm = rmse_pix_ensamble, ceam = rmse_crown)
                       )
-  saveRDS(test_results, paste("./outdir/performance_10_", trait, ".rds", sep=""))
+  saveRDS(test_results, paste("./outdir/performance_100_", trait, ".rds", sep=""))
   return(test_results)
 }

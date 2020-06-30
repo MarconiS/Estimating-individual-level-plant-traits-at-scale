@@ -15,6 +15,7 @@ softmax <- function(x) {
 f = "394000_3283000_152940.tif"
 siteID = "OSBS"
 trait = "LMA"
+epsg = 32617
 sites = c("OSBS", "TALL")
 pt = "//orange/ewhite/s.marconi/Chapter1/2015_Campaign/D03/OSBS/L4/corrHSI/"
 outdir = "//orange/ewhite/s.marconi/Chapter1/2015_Campaign/D03/OSBS/L4/traits/"
@@ -68,15 +69,15 @@ for(bb in 1:length(weights)){
   colnames(pred_int) = c("fit","lwr","upr")
   output.daic <-pred_int * weights[bb]
 }
-
+rm(model_stack)
 dat = matrix(NA, length(reduced_spectra), 3)
 dat[reduced_spectra,] = output.daic
 rm(output.daic)
 
 dim(dat) = c(rbbox[1:2],3)
-lyr = raster(f)
+lyr = raster(paste(pt,f, sep="/"))
 dat = raster::brick(dat, xmn=lyr@extent[1], xmx=lyr@extent[2], #nl = 9,
                     ymn=lyr@extent[3], ymx=lyr@extent[4], crs=lyr@crs, transpose=FALSE)
+dat
 names(dat) = paste(trait, c("hat", "lw","up"), sep="_")
-brick <- raster::stack(brick, lyr)
-raster::writeRaster(brick, paste(outdir, trait, f, sep ="/"))
+raster::writeRaster(dat, paste(pt, trait, f, sep ="/"))

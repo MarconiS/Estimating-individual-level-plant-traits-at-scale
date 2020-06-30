@@ -57,17 +57,17 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
       X = X[,-1]
     }
     #perform a cross-valiadation on train-validation set
-    train.PLS<- plsRglm::cv.plsRglm(dataY=(Y),dataX=X, scaleY = T, verbose=F,
+    train.PLS<- plsRglm::cv.plsRglm(dataY=log(Y),dataX=X, scaleY = T, verbose=F,
                                     nt=15,NK=1, K=5,
-                                    modele="pls-glm-family",family=gaussian(link = "log"))
+                                    modele="pls-glm-family",family=gaussian())
     out <- list()
     #define number of components to chose by calculating PRESS statistics
     press <- unlist(plsRglm::kfolds2Press(train.PLS))
     out["ncomp"] = which(press == min(press))
 
     # retrain on chosen number of components
-    mod <- plsRglm::plsRglm(dataY=(Y),dataX=X,as.integer(out["ncomp"]), scaleY = T,
-                            modele="pls-glm-family",family=gaussian(link = "log"))
+    mod <- plsRglm::plsRglm(dataY=log(Y),dataX=X,as.integer(out["ncomp"]), scaleY = T,
+                            modele="pls-glm-family",family=gaussian())
     X.tst <- as.matrix(test.data[grepl("band", names(test.data))])
     # if(nrmlz==T){
     #   X.ntst <-t(diff(t((X.tst[,-c(1:nsites)])),differences=1, lag=3))
