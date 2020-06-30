@@ -85,10 +85,11 @@ pls_glm_predict <- function(object,newdata,
       #}
       if (type=="terms"){return(predict(object$FinalModel,newdata=ttpred,type = "terms",se.fit=se.fit,dispersion = dispersion,...))
       }
-      if (type=="response"){y_hat = predict(object$FinalModel,
-                                    newdata=ttpred,type = "response",
-                                    se.fit=se.fit,interval = 'prediction',
-                                    weights = wt, dispersion = dispersion,...)
+      if (type=="response"){
+        # y_hat = predict(object$FinalModel,
+        #                             newdata=ttpred,type = "response",
+        #                             se.fit=se.fit,interval = 'prediction',
+        #                             weights = wt, dispersion = dispersion,...)
         pred_int = HH::interval(object$FinalModel, newdata=ttpred, type="response")
         pred_int = pred_int[,c(1,4,5)]
         colnames(pred_int) = c("fit","lwr","upr")

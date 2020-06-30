@@ -1,6 +1,6 @@
 clean_spectra <- function(brick, ndvi = 0.5, nir = 0.25, outlier = F){
   # filter for no data
-  brick = brick %>% select(contains("band"))
+  brick = brick %>% dplyr::select(contains("band"))
   mask1 = apply(brick[,1:369], 1, function(x)all(x>0))
   mask2 = apply(brick[,1:369], 1, function(x)all(x<1))
   brick[!as.logical(mask1 *mask2), ] = NA
@@ -12,7 +12,7 @@ clean_spectra <- function(brick, ndvi = 0.5, nir = 0.25, outlier = F){
   mask[is.na(mask)] = T
   brick[mask,] = NA
   rm(mask, ndvi, nir860)
-  brick = brick[,15:365]
+  brick = brick[,14:365]
   normMat <- sqrt(apply(brick^2,FUN=sum,MAR=1, na.rm=TRUE))
   normMat <- matrix(data=rep(normMat,ncol(brick)),ncol=ncol(brick))
   brick=brick/normMat
