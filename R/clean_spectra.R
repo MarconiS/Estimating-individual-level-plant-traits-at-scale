@@ -1,6 +1,7 @@
 clean_spectra <- function(brick, ndvi = 0.5, nir = 0.25, outlier = F){
   # filter for no data
   brick = brick %>% dplyr::select(contains("band"))
+  brick = brick %>% dplyr::select(-one_of("band_site"))
   mask1 = apply(brick[,1:369], 1, function(x)all(x>0))
   mask2 = apply(brick[,1:369], 1, function(x)all(x<1))
   brick[!as.logical(mask1 *mask2), ] = NA
@@ -20,7 +21,7 @@ clean_spectra <- function(brick, ndvi = 0.5, nir = 0.25, outlier = F){
 
   #filter for known artifacts
   cnd = (brick[,298] > 0.03)
-  idx <- (apply(cnd, 1, any))
+  idx <- (apply(data.frame(cnd), 1, any))
   if(length(idx) !=0){
     idx[is.na(idx)] = T
     brick[idx,] = NA
