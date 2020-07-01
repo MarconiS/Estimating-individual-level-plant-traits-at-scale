@@ -1,8 +1,17 @@
+#!/bin/bash
+
+args <- commandArgs()
+print(args)
+f = args[6]
+siteID = args[7]
+trait = args[8]
+nbags = args[9]
 # make prediction for a tile
 library(tidyverse)
 library(raster)
 source("./R/fasRas_to_dt.R")
 source("./R/clean_spectra.R")
+
 #retrieve number of snaps
 softmax <- function(x) {
   x <- x[!is.na(x)]
@@ -12,15 +21,21 @@ softmax <- function(x) {
 
 
 # get spectra and clean it
-f = "394000_3283000_152940.tif"
-siteID = "OSBS"
-trait = "LMA"
-epsg = 32617
+
+#siteID = "OSBS"
+#trait = "LMA"
+#epsg = 32617
 sites = c("OSBS", "TALL")
-pt = "//orange/ewhite/s.marconi/Chapter1/2015_Campaign/D03/OSBS/L4/corrHSI/"
-outdir = "//orange/ewhite/s.marconi/Chapter1/2015_Campaign/D03/OSBS/L4/traits/"
+if(siteID == "OSBS"){
+  pt = "//orange/ewhite/s.marconi/Chapter1/2015_Campaign/D03/OSBS/L4/corrHSI/"
+  outdir = "//orange/ewhite/s.marconi/Chapter1/2015_Campaign/D03/OSBS/L4/traits/"
+  epsg = 32617
+}else{
+  pt = "//orange/ewhite/s.marconi/Chapter1/2015_Campaign/D07/TALL/L4/corrHSI/"
+  outdir = "//orange/ewhite/s.marconi/Chapter1/2015_Campaign/D07/TALL/L4/traits/"
+  epsg = 32616
+}
 dat = raster::brick(paste(pt,f, sep="/"))
-nbags = 100
 rbbox = dim(dat)
 dat = as.data.table.raster(dat)
 colnames(dat) = paste("band", 1:369, sep="_")
@@ -78,6 +93,9 @@ dim(dat) = c(rbbox[1:2],3)
 lyr = raster(paste(pt,f, sep="/"))
 dat = raster::brick(dat, xmn=lyr@extent[1], xmx=lyr@extent[2], #nl = 9,
                     ymn=lyr@extent[3], ymx=lyr@extent[4], crs=lyr@crs, transpose=FALSE)
-dat
+crs(dat) <- CRS(paste('+init=EPSG:', epsg, sep=""))
 names(dat) = paste(trait, c("hat", "lw","up"), sep="_")
-raster::writeRaster(dat, paste(pt, trait, f, sep ="/"))
+writeRaster(dat, paste(outdir, trait, f, sep ="/"), overwrite = T)
+
+
+

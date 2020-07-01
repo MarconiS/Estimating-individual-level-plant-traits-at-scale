@@ -120,7 +120,7 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
   bnd_site <- test.data.x[["band_site"]] %>% factor %>% fastDummies::dummy_cols()
   colnames(bnd_site) <- stringr::str_replace(colnames(bnd_site), ".data_", "band_")
   test.data.x <- cbind.data.frame(bnd_site[-1], tmp_features[-1], tmp_variables)
-  test.data.x <- test.data.x[-354]
+  test.data.x <- test.data.x %>% select(-one_of(trait))
 
   crownID = aug.mat["individualID"]
   colnames(test.data.x)[1:2] = c("band_OSBS", "band_TALL")
@@ -148,9 +148,8 @@ pls_glm_performance <- function(trait = "N_pct", nbags = 10, normz=F){
     optim.ncomps <- model_stack[[md]]$ncomp
     #make predictions using the ith model
     ith_mod_prediction <- pls_glm_predict(pls.mod.train, newdata = test.PLS,
-                                          wt = rep(1, nrow(test.PLS)),
                                           ncomp=optim.ncomps,  type='response')
-    ith_mod_prediction=(ith_mod_prediction)
+    ith_mod_prediction=exp(ith_mod_prediction)
     pred.val.data$fit <- ith_mod_prediction[,1]
     pred.val.data$upper <- ith_mod_prediction[,3]
     pred.val.data$lower <- ith_mod_prediction[,2]
