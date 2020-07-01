@@ -93,7 +93,7 @@ dim(dat) = c(rbbox[1:2],3)
 lyr = raster(paste(pt,f, sep="/"))
 dat = raster::brick(dat, xmn=lyr@extent[1], xmx=lyr@extent[2], #nl = 9,
                     ymn=lyr@extent[3], ymx=lyr@extent[4], crs=lyr@crs, transpose=FALSE)
-crs(dat) <- CRS(paste('+init=EPSG:', epsg, sep=""))
+#crs(dat) <- CRS(paste('+init=EPSG:', epsg, sep=""))
 names(dat) = paste(trait, c("hat", "lw","up"), sep="_")
 writeRaster(dat, paste(outdir, trait, f, sep ="/"), overwrite = T)
 
