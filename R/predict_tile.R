@@ -21,9 +21,11 @@ softmax <- function(x) {
 
 
 # get spectra and clean it
-
+# f = "399000_3285000_161934.tif"
 #siteID = "OSBS"
 #trait = "LMA"
+#nbags = 100
+
 #epsg = 32617
 sites = c("OSBS", "TALL")
 if(siteID == "OSBS"){
@@ -42,59 +44,60 @@ colnames(dat) = paste("band", 1:369, sep="_")
 reduced_spectra = clean_spectra(dat, ndvi = 0.5, nir = 0.2)
 dat = reduced_spectra$refl
 reduced_spectra = reduced_spectra$good_pix
-#dat = dat[complete.cases(dat),]
-#add site band
-bnd_site <- rep(siteID, nrow(dat)) %>% factor(levels=sites) %>% fastDummies::dummy_cols()
-colnames(bnd_site) <- stringr::str_replace(colnames(bnd_site), ".data_", "band_")
-dat = cbind.data.frame(bnd_site, dat)
-rm(bnd_site)
-model_stack <- readRDS(paste("/orange/ewhite/s.marconi/Chapter1/hiPyRneon/outdir/EPBMs/1002", trait, ".rds", sep=""))
-mod_col = model_stack[[1]]$mod$dataX %>% names
-dat = dat %>% dplyr::select(mod_col)
-# calculate, scale the dAIC to rank and weight each model using a softmax function
-mod.aic=rep(0,length(model_stack))
-for(bb in 1: length(model_stack)){
-  mod.aic[bb] <- model_stack[[bb]]$mod$FinalModel$aic
+if( nrow(dat) !=0){
+  #dat = dat[complete.cases(dat),]
+  #add site band
+  bnd_site <- rep(siteID, nrow(dat)) %>% factor(levels=sites) %>% fastDummies::dummy_cols()
+  colnames(bnd_site) <- stringr::str_replace(colnames(bnd_site), ".data_", "band_")
+  dat = cbind.data.frame(bnd_site, dat)
+  rm(bnd_site)
+  model_stack <- readRDS(paste("/orange/ewhite/s.marconi/Chapter1/hiPyRneon/outdir/EPBMs/1002", trait, ".rds", sep=""))
+  mod_col = model_stack[[1]]$mod$dataX %>% names
+  dat = dat %>% dplyr::select(mod_col)
+  # calculate, scale the dAIC to rank and weight each model using a softmax function
+  mod.aic=rep(0,length(model_stack))
+  for(bb in 1: length(model_stack)){
+    mod.aic[bb] <- model_stack[[bb]]$mod$FinalModel$aic
+  }
+  selected_mods = which(mod.aic %in% sort(mod.aic, decreasing = F)[1:nbags])
+  #mod.aic = mod.r2
+  mod.aic <- scale(mod.aic[selected_mods])
+  delta.aic <- mod.aic - min(mod.aic)
+  weights <- softmax(-0.5*delta.aic)
+
+  output.daic = matrix(0,nrow(dat), 3)
+  for(bb in 1:length(weights)){
+    md = selected_mods[bb]
+    pls.mod.train <- model_stack[[md]]$mod
+    optim.ncomps <- model_stack[[md]]$ncomp
+    #make predictions using the ith model
+    newdata = dat
+    nrnd <- nrow(newdata)
+    newdata <- sweep(sweep(newdata, 2, attr(pls.mod.train$ExpliX, "scaled:center")),
+                     2, attr(pls.mod.train$ExpliX, "scaled:scale"), "/")
+    newdata <- as.matrix(newdata)
+
+    newdata = lapply(1:nrnd, function(x)c(newdata[x,] %*% pls.mod.train$wwetoile[, 1:optim.ncomps],
+                                          rep(0, pls.mod.train$computed_nt - optim.ncomps)))
+    newdata = do.call(rbind, newdata)
+    colnames(newdata) <- NULL
+    newdata <- data.frame(tt = newdata)
+    pred_int = HH::interval(pls.mod.train$FinalModel, newdata=newdata, type="response")
+    pred_int = pred_int[,c(1,4,5)]
+    colnames(pred_int) = c("fit","lwr","upr")
+    output.daic <-pred_int * weights[bb]
+  }
+  rm(model_stack)
+  dat = matrix(NA, length(reduced_spectra), 3)
+  dat[reduced_spectra,] = output.daic
+  rm(output.daic)
+
+  dim(dat) = c(rbbox[1:2],3)
+  lyr = raster(paste(pt,f, sep="/"))
+  dat = raster::brick(dat, xmn=lyr@extent[1], xmx=lyr@extent[2], #nl = 9,
+                      ymn=lyr@extent[3], ymx=lyr@extent[4], crs=paste('+init=epsg:', epsg, sep=""), transpose=FALSE)
+  names(dat) = paste(trait, c("hat", "lw","up"), sep="_")
+  writeRaster(dat, paste(outdir, trait, f, sep ="/"), overwrite = T)
+
 }
-selected_mods = which(mod.aic %in% sort(mod.aic, decreasing = F)[1:nbags])
-#mod.aic = mod.r2
-mod.aic <- scale(mod.aic[selected_mods])
-delta.aic <- mod.aic - min(mod.aic)
-weights <- softmax(-0.5*delta.aic)
-
-output.daic = matrix(0,nrow(dat), 3)
-for(bb in 1:length(weights)){
-  md = selected_mods[bb]
-  pls.mod.train <- model_stack[[md]]$mod
-  optim.ncomps <- model_stack[[md]]$ncomp
-  #make predictions using the ith model
-  newdata = dat
-  nrnd <- nrow(newdata)
-  newdata <- sweep(sweep(newdata, 2, attr(pls.mod.train$ExpliX, "scaled:center")),
-                   2, attr(pls.mod.train$ExpliX, "scaled:scale"), "/")
-  newdata <- as.matrix(newdata)
-
-  newdata = lapply(1:nrnd, function(x)c(newdata[x,] %*% pls.mod.train$wwetoile[, 1:optim.ncomps],
-                                        rep(0, pls.mod.train$computed_nt - optim.ncomps)))
-  newdata = do.call(rbind, newdata)
-  colnames(newdata) <- NULL
-  newdata <- data.frame(tt = newdata)
-  pred_int = HH::interval(pls.mod.train$FinalModel, newdata=newdata, type="response")
-  pred_int = pred_int[,c(1,4,5)]
-  colnames(pred_int) = c("fit","lwr","upr")
-  output.daic <-pred_int * weights[bb]
-}
-rm(model_stack)
-dat = matrix(NA, length(reduced_spectra), 3)
-dat[reduced_spectra,] = output.daic
-rm(output.daic)
-
-dim(dat) = c(rbbox[1:2],3)
-lyr = raster(paste(pt,f, sep="/"))
-dat = raster::brick(dat, xmn=lyr@extent[1], xmx=lyr@extent[2], #nl = 9,
-                    ymn=lyr@extent[3], ymx=lyr@extent[4], crs=paste('+init=epsg:', epsg, sep=""), transpose=FALSE)
-names(dat) = paste(trait, c("hat", "lw","up"), sep="_")
-writeRaster(dat, paste(outdir, trait, f, sep ="/"), overwrite = T)
-
-
 
