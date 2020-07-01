@@ -22,9 +22,9 @@ softmax <- function(x) {
 
 # get spectra and clean it
 # f = "399000_3285000_161934.tif"
-#siteID = "OSBS"
-#trait = "LMA"
-#nbags = 100
+# siteID = "OSBS"
+# trait = "LMA"
+# nbags = 100
 
 #epsg = 32617
 sites = c("OSBS", "TALL")
@@ -33,8 +33,8 @@ if(siteID == "OSBS"){
   outdir = "//orange/ewhite/s.marconi/Chapter1/2015_Campaign/D03/OSBS/L4/traits/"
   epsg = 32617
 }else{
-  pt = "//orange/ewhite/s.marconi/Chapter1/2015_Campaign/D07/TALL/L4/corrHSI/"
-  outdir = "//orange/ewhite/s.marconi/Chapter1/2015_Campaign/D07/TALL/L4/traits/"
+  pt = "//orange/ewhite/s.marconi/Chapter1/2015_Campaign/D08/TALL/L4/corrHSI/"
+  outdir = "//orange/ewhite/s.marconi/Chapter1/2015_Campaign/D08/TALL/L4/traits/"
   epsg = 32616
 }
 dat = raster::brick(paste(pt,f, sep="/"))
