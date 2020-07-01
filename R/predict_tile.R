@@ -41,7 +41,7 @@ dat = raster::brick(paste(pt,f, sep="/"))
 rbbox = dim(dat)
 dat = as.data.table.raster(dat)
 colnames(dat) = paste("band", 1:369, sep="_")
-reduced_spectra = clean_spectra(dat, ndvi = 0.5, nir = 0.2)
+reduced_spectra = clean_spectra(dat, ndvi = 0.3, nir = 0.1)
 dat = reduced_spectra$refl
 reduced_spectra = reduced_spectra$good_pix
 if( nrow(dat) !=0){
