@@ -13,7 +13,7 @@ clean_spectra <- function(brick, ndvi = 0.5, nir = 0.25, outlier = F){
   mask[is.na(mask)] = T
   brick[mask,] = NA
   rm(mask, ndvi, nir860)
-  brick = brick[,14:365]
+  brick = brick[,16:367]
   normMat <- sqrt(apply(brick^2,FUN=sum,MAR=1, na.rm=TRUE))
   normMat <- matrix(data=rep(normMat,ncol(brick)),ncol=ncol(brick))
   brick=brick/normMat
