@@ -1,11 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=tilePrediction    # Job name
+#SBATCH --mail-type=FAIL
 #SBATCH --mail-user=sergio.marconi@weecology.org   # Where to send mail
 #SBATCH --account=ewhite
 #SBATCH --qos=ewhite-b
 
 #SBATCH --cpus-per-task=1            # Number of cores per MPI rank
-#SBATCH --mem=12Gb
+#SBATCH --mem=16gb
 
 #SBATCH --time=48:00:00       #Time limit hrs:min:sec
 #SBATCH --output=tilePrediction.out   # Standard output and error log
