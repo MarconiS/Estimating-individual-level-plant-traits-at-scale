@@ -100,6 +100,6 @@ reduced_spectra = clean_spectra(dat)
 #                       ymn=lyr@extent[3], ymx=lyr@extent[4], crs=paste('+init=epsg:', epsg, sep=""), transpose=TRUE)
 #   names(dat) = paste(trait, c("hat", "lw","up"), sep="_")
 #   writeRaster(dat, paste(outdir, trait, f, sep ="/"), overwrite = T)
-saveRDS(reduced_spectra, paste(outdir, trait, f, sep ="/"))
+saveRDS(reduced_spectra, paste(outdir, f, sep ="/"))
 #}
 

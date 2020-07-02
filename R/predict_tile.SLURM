@@ -6,7 +6,7 @@
 #SBATCH --qos=ewhite-b
 
 #SBATCH --cpus-per-task=1            # Number of cores per MPI rank
-#SBATCH --mem=24gb
+#SBATCH --mem=26gb
 
 #SBATCH --time=48:00:00       #Time limit hrs:min:sec
 #SBATCH --output=tilePrediction.out   # Standard output and error log
