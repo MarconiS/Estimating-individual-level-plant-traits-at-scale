@@ -18,7 +18,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     calib_ids = readr::read_csv("./indir/Misc/calibration_ids.csv")
     test_ids = readr::read_csv("./indir/Misc/oob_ids.csv")
       #cr.Traits %>% filter(individualID %in% spectra$individualID) %>% group_by(taxonID, SITE)%>%
-     # sample_frac(0.2)
+     # sample_frac(0.4)
     #get random flip spectra data
     aug.spectra <- readr::read_csv(paste('./indir/Permutations/onePix1Crown_', ll, '.csv', sep = ''))
     #aug.spectra = spectra_ave
