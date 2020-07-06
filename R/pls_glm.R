@@ -32,8 +32,8 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     aug.spectra <- data.frame(aug.spectra["individualID"], aug.spectra["taxonID"], bnd_site[-1], tmp_features, tmp_variables)
     aug.spectra = aug.spectra[complete.cases(aug.spectra),]
     # Subset data into cal/val by site
-    train.data = aug.spectra %>% filter(!individualID %in% calib_ids$calib_id)
-    test.data = aug.spectra %>% filter(individualID %in% calib_ids$calib_id)
+    train.data = aug.spectra %>% filter(!individualID %in% calib_ids$individualID)
+    test.data = aug.spectra %>% filter(individualID %in% calib_ids$individualID)
     #eval.set <- cut_set(aug.X, c.id = aug.spectra[["individualID"]])
     #train.data <- eval.set$train
     #test.data <- eval.set$test
