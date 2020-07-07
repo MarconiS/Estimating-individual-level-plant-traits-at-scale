@@ -8,6 +8,7 @@ build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
   source("./R/get_random_bags.R")
   source("./R/cut_set.R")
   source("./R/pls_glm.R")
+  loop = as.integer(loop)
   wrangle = function(x){
     ifelse(is.character(x), x[1], mean(x))
   }
