@@ -8,6 +8,9 @@
 #' @import Metrics
 #'
 #'
+
+trait = "Npercent"
+nbags = 100
 pls_glm_predict <- function(object,newdata,
                             comps=object$computed_nt, type=c("link", "response", "terms", "scores", "class", "probs"),
                             se.fit=FALSE, wt = NULL, dispersion = NULL,methodNA="adaptative",verbose=TRUE,...)
@@ -41,7 +44,6 @@ rmse <- function(x_p, x_o){
   ssd = sum((x_p - x_o)^2)
   rmse = sqrt(ssd/length(x_o))
 }
-
 loops <- list.files("./outdir/PBMs", pattern = trait, full.names = T)
 
 #check if Ensemble model has been created yet
@@ -71,16 +73,14 @@ for(bb in mask[,1]){
   foo <- readRDS(loops[bb])
   model_stack[[i]] <-foo
 }
+saveRDS(list(mod.aic, mod.r2), paste("./outdir/eval_", trait, ".rds", sep=""))
 #save the model ensemble in an R object
 #model_stack <- model_stack[mask[,1]]
 saveRDS(model_stack,
-        file = paste("./outdir/EPBMs/1002", trait, ".rds", sep=""))
+        file = paste("./outdir/EPBMs/100_", trait, ".rds", sep=""))
 # }else{
 #   model_stack <- readRDS(paste("./outdir/EPBMs/100", trait, ".rds", sep=""))
 # }
-
-#  model_stack <- readRDS(paste("./outdir/EPBMs/", trait, ".rds", sep=""))
-
 
 library(tidyverse)
 # calculate, scale the dAIC to rank and weight each model using a softmax function
@@ -93,7 +93,7 @@ for(bb in 1: length(model_stack)){
 }
 selected_mods = which(mod.aic %in% sort(mod.aic, decreasing = F)[1:nbags])
 #mod.aic = mod.r2
-#mod.aic <- scale(mod.aic)#[selected_mods])
+mod.aic <- scale(mod.aic[selected_mods])
 delta.aic <- mod.aic - min(mod.aic)
 weights <- softmax(-0.5*delta.aic)
 
@@ -103,15 +103,15 @@ train.data.y <- read.csv("./indir/Traits/Chapter1_field_data.csv") %>%
 #just_for_
 
 #get OOB data crowns
-oob = readr::read_csv("./indir/Misc/oob_ids.csv")
+test.data.y = readr::read_csv("./indir/Misc/oob_ids.csv")
 #cleaning out of bag test Y and X
-test.data.y <- read.csv("./indir/Traits/Chapter1_field_data.csv") %>%
-  filter(individualID %in% oob$test_id) %>%
-  dplyr::select(c("individualID", trait, "SITE")) %>%
-  group_by(individualID)%>%
-  summarize_if(is.numeric, mean)
+# test.data.y <- read.csv("./indir/Traits/Chapter1_field_data.csv") %>%
+#   filter(individualID %in% oob$individualID) %>%
+#   dplyr::select(c("individualID", trait, "SITE")) %>%
+#   group_by(individualID)%>%
+#   summarize_if(is.numeric, mean)
 test.data.x <- read.csv("./indir/Spectra/reflectance_all.csv") %>%
-  filter(individualID %in% oob$test_id)
+  filter(individualID %in% test.data.y$individualID)
 
 aug.mat = inner_join(test.data.x, test.data.y)
 tmp_features<- aug.mat[grepl("band", names(aug.mat))]
@@ -173,6 +173,9 @@ colnames(output.daic) <- c("individualID", "yhat")
 #compare pixel predicions with crowns
 output <- inner_join(output, test.data.y, by = "individualID")
 output.daic <- inner_join(output.daic, test.data.y, by = "individualID")
+output = output[complete.cases(output),]
+output.daic = output.daic[complete.cases(output.daic),]
+
 pbm_all <- 1 - sum((as.numeric(output[["yhat"]]) - (output[[trait]]))^2) / sum((output[[trait]] - mean(output[[trait]]))^2)
 epbm_r2 <-  1 - sum((output.daic$yhat - (output.daic[[trait]]))^2) /
   sum((output.daic[[trait]] - mean(output.daic[[trait]]))^2)
