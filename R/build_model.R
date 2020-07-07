@@ -8,7 +8,9 @@ build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
   source("./R/get_random_bags.R")
   source("./R/cut_set.R")
   source("./R/pls_glm.R")
-  loop = as.integer(loop)
+  rand_range = readr::read_table("random_example.txt", col_names=T)
+  rand_range = colnames(rand_range)
+  loop = as.integer(rand_range[loop])
   wrangle = function(x){
     ifelse(is.character(x), x[1], mean(x))
   }
