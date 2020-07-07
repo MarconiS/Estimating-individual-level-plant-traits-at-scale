@@ -16,8 +16,8 @@ build_model <- function(loop=1, dat_pt = "./indir/Spectra/CrownBrdfSpectra.csv"
   reduced_spectra = clean_spectra(spectra)
   spectra = cbind.data.frame(spectra[reduced_spectra$good_pix, 1:2], reduced_spectra$refl)
   spectra_ave = spectra %>% group_by(individualID) %>% summarize_all(wrangle)
-  readr::write_csv(spectra, "./indir/Spectra/reflectance_all.csv")
-  readr::write_csv(spectra_ave, "./indir/Spectra/plot_reflectance.csv")
+  #readr::write_csv(spectra, "./indir/Spectra/reflectance_all.csv")
+  #readr::write_csv(spectra_ave, "./indir/Spectra/plot_reflectance.csv")
   #extract n combinations of pixles by extracting one per bag
   get_random_bags(spectra, lp = loop)
   # run the pls glm on training bags for each random extractions
