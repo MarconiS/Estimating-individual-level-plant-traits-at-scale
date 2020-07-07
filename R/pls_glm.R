@@ -67,6 +67,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     if(nsites==1){
       X = X[,-1]
     }
+    set.seed(ll)
     #perform a cross-valiadation on train-validation set
     train.PLS<- plsRglm::cv.plsRglm(dataY=log(Y),dataX=X, scaleY = T, verbose=F,
                                     nt=15,NK=1, K=5,
@@ -77,6 +78,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     out["ncomp"] = which(press == min(press))
 
     # retrain on chosen number of components
+    set.seed(ll)
     mod <- plsRglm::plsRglm(dataY=log(Y),dataX=X,as.integer(out["ncomp"]), scaleY = T,
                             modele="pls-glm-family",family=gaussian())
     X.tst <- as.matrix(test.data[grepl("band", names(test.data))])
