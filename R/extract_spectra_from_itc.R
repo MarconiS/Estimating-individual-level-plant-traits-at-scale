@@ -1,16 +1,17 @@
-itcs = readr::read_csv("../neonVegWrangleR/outdir/field_data/vst_latest_2m.csv")
-itcs = readr::read_csv("../Chapter2/indir/final_field_dataset.csv")
-itcs = itcs %>% dplyr::filter(canopyPosition %in% c("Full sun", "Partially shaded", "Open grown"))
-itcs = sf::st_as_sf(itcs, coords = c("longitude", "latitude"), crs = 4326)
-plot(itcs[1])
-raster_path = "/Users/smarconi/Documents/Data/bdrf"
+# itcs = readr::read_csv("../neonVegWrangleR/outdir/field_data/vst_latest_2m.csv")
+# itcs = readr::read_csv("../Chapter2/indir/final_field_dataset.csv")
+# itcs = itcs %>% dplyr::filter(canopyPosition %in% c("Full sun", "Partially shaded", "Open grown"))
+#itcs = sf::st_as_sf(itcs, coords = c("longitude", "latitude"), crs = 4326)
+raster_path = "../../Data/ch1_plots"
+itcs = sf::read_sf("../../Data/Dimensions/OSBS_crown_polygons/OSBS_sample_polygons_edits_Feb2018.shp")
+itcs$ID_x = itcs$ID
 extract_spectra_from_itcs <- function(itcs, raster_path){
   data = NULL
   for(plt in unique(itcs$ID_x)){
     st_ic = itcs %>% dplyr::filter(ID_x == plt)
-    tryCatch({
       tiles = list.files(raster_path, pattern = as.character(plt), full.names = T)
       for(pt in tiles){
+        tryCatch({
         hsi = raster::brick(pt)
         raster::crs(hsi) = raster::crs(st_ic)
         #extract hsi with a buffer if point, or exact polygon if itc
@@ -22,12 +23,12 @@ extract_spectra_from_itcs <- function(itcs, raster_path){
         foo = do.call(rbind.data.frame, foo)
 
         colnames(foo) = c("individualID", paste("band", 1:369, sep = "_"))
-        data[[plt]] = foo
-      }
-    },error=function(e){message(paste(plt,"tile is missing"))})
+        data[[pt]] = foo
+      },error=function(e){message(paste(pt,"tile is missing"))})
+    }
   }
-  data = do.call(rbind.data.frame, data)
-  readr::write_csv(data, "./indir/spectra/silva2px_traits_reflectance.csv")
+  dat = do.call(rbind.data.frame, data)
+  readr::write_csv(final, "./indir/spectra/july_ch1_refl.csv")
 }
 
 extract_spectra_from_itcs(itcs, raster_path)

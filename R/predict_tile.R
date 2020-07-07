@@ -96,7 +96,7 @@ if(get_transformation == T){
     }
     #rm(model_stack)
     dat = matrix(NA, length(reduced_spectra), 3)
-    dat[reduced_spectra,] = output.daic
+    dat[reduced_spectra,] = exp(output.daic)
     rm(output.daic)
 
     dim(dat) = c(rbbox[2:1],3)
