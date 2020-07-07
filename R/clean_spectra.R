@@ -1,4 +1,4 @@
-clean_spectra <- function(brick, ndvi = 0.5, nir = 0.25, outlier = F){
+clean_spectra <- function(brick, ndvi = 0.3, nir = 0.1, outlier = F){
   # filter for no data
   brick = brick %>% dplyr::select(contains("band"))
   brick = brick %>% dplyr::select(-one_of("band_site"))

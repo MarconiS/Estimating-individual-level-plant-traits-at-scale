@@ -9,18 +9,29 @@
 pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
 
     wrangle = function(x){
-      ifelse(is.character(x), x[1], mean(x))
+      ifelse(is.character(x), x[1], mean(x, na.rm=T))
     }
     #get traits data
     cr.Traits <- readr::read_csv(paste("./indir/Traits/Chapter1_field_data.csv",sep=""))
     cr.Traits = cr.Traits %>% group_by(individualID) %>% summarize_all(wrangle)
+    cr.Traits = cr.Traits[complete.cases(cr.Traits),]
     train_ids = readr::read_csv("./indir/Misc/train_ids.csv")
     calib_ids = readr::read_csv("./indir/Misc/calibration_ids.csv")
     test_ids = readr::read_csv("./indir/Misc/oob_ids.csv")
-      #cr.Traits %>% filter(individualID %in% spectra$individualID) %>% group_by(taxonID, SITE)%>%
-     # sample_frac(0.4)
+
+    #remove shaded
+    train_ids = train_ids %>% filter(CRLIGHT !="shade") %>%
+      dplyr::select(individualID) %>% unique
+    calib_ids = calib_ids %>% filter(CRLIGHT !="shade") %>%
+      dplyr::select(individualID) %>% unique
+    test_ids = test_ids %>% filter(CRLIGHT !="shade") %>%
+      dplyr::select(individualID) %>% unique
+
+    #cr.Traits %>% filter(individualID %in% spectra$individualID) %>% group_by(taxonID, SITE)%>%
+    # sample_frac(0.4)
     #get random flip spectra data
     aug.spectra <- readr::read_csv(paste('./indir/Permutations/onePix1Crown_', ll, '.csv', sep = ''))
+    #aug.spectra <- readr::read_csv(paste('./indir/Spectra/plot_reflectance.csv'))
     #aug.spectra = spectra_ave
     aug.spectra <- inner_join(cr.Traits, aug.spectra, by = "individualID")
     aug.spectra = aug.spectra %>% filter(!individualID %in% test_ids)
@@ -32,7 +43,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     aug.spectra <- data.frame(aug.spectra["individualID"], aug.spectra["taxonID"], bnd_site[-1], tmp_features, tmp_variables)
     aug.spectra = aug.spectra[complete.cases(aug.spectra),]
     # Subset data into cal/val by site
-    train.data = aug.spectra %>% filter(!individualID %in% calib_ids$individualID)
+    train.data = aug.spectra %>% filter(individualID %in% train_ids$individualID)
     test.data = aug.spectra %>% filter(individualID %in% calib_ids$individualID)
     #eval.set <- cut_set(aug.X, c.id = aug.spectra[["individualID"]])
     #train.data <- eval.set$train
