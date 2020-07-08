@@ -3,8 +3,8 @@
 # itcs = itcs %>% dplyr::filter(canopyPosition %in% c("Full sun", "Partially shaded", "Open grown"))
 #itcs = sf::st_as_sf(itcs, coords = c("longitude", "latitude"), crs = 4326)
 raster_path = "../../Data/ch1_plots"
-itcs = sf::read_sf("../../Data/Dimensions/TALL_crown_polygons/TALL_sample_crowns_edits_May2018.shp")
-itcs$ID_x = itcs$tree
+itcs = sf::read_sf("../../Data/Dimensions/OSBS_crown_polygons/OSBS_sample_polygons_edits_Feb2018.shp")
+itcs$ID_x = itcs$ID
 extract_spectra_from_itcs <- function(itcs, raster_path){
   data = pix = NULL
   for(plt in unique(itcs$ID_x)){
@@ -21,7 +21,6 @@ extract_spectra_from_itcs <- function(itcs, raster_path){
         individualID = st_ic$ID_x
         foo = lapply(1:length(individualID), function(x) cbind(individualID[[x]], foo[[x]]))
         foo = do.call(rbind.data.frame, foo)
-
         colnames(foo) = c("individualID", paste("band", 1:369, sep = "_"))
         data[[pt]] = foo
         pix[[pt]] = nrow(foo)
@@ -29,7 +28,13 @@ extract_spectra_from_itcs <- function(itcs, raster_path){
     }
   }
   dat = do.call(rbind.data.frame, data)
-  readr::write_csv(final, "./indir/spectra/july_ch1_refl.csv")
+  flpt = do.call(rbind.data.frame, strsplit(rownames(dat), split = "/"))[5]
+  flpt = do.call(rbind.data.frame, strsplit(unlist(flpt), split = "_"))[1]
+  colnames(flpt) = "flpt"
+  dat = cbind.data.frame(flpt, dat)
+  dat["band_site"] = "OSBS"
+  rownames(dat)=NULL
+  readr::write_csv(final, "./indir/spectra/final.csv")
 }
 
 extract_spectra_from_itcs(itcs, raster_path)

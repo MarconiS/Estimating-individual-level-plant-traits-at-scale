@@ -1,5 +1,5 @@
 #!/bin/bash
-build_model <- function(loop=1, dat_pt = "./indir/Spectra/july_ch1_refl.csv"
+build_model <- function(loop=1, dat_pt = "./indir/Spectra/chapter1_spectra.csv"
                         ,tr = c("LMA", "Npercent", "Ppercent", "Cpercent")){
   library(tidyverse)
   library(plsRglm)
@@ -16,7 +16,8 @@ build_model <- function(loop=1, dat_pt = "./indir/Spectra/july_ch1_refl.csv"
   }
   #clean pixels in the dataset using ndvi and nir fitler, and maybe  detecting outliers from pca
   spectra = read_csv(dat_pt)
-  reduced_spectra = clean_spectra(spectra,  ndvi = 0.5, nir = 0.25)
+  spectra = spectra %>% select(-one_of("flpt"))
+  reduced_spectra = clean_spectra(sp3,  ndvi = 0.5, nir = 0.25)
   spectra = cbind.data.frame(spectra[reduced_spectra$good_pix, 1:2], reduced_spectra$refl)
   spectra_ave = spectra %>% group_by(individualID) %>% summarize_all(wrangle)
   #readr::write_csv(spectra, "./indir/Spectra/reflectance_all.csv")
