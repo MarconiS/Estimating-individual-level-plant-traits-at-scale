@@ -105,16 +105,16 @@ test.data.x <- read.csv("./indir/Spectra/reflectance_all.csv") %>%
 
 aug.mat = inner_join(test.data.x, test.data.y)
 aug.mat$individualID = factor(aug.mat$individualID)
-aug.mat = aug.mat %>%
-  dplyr::group_by(individualID, band_site) %>%
-  #slice_min(n = 20)
-  top_n(20, wt = "band_124") #
+# aug.mat = aug.mat %>%
+#   dplyr::group_by(individualID, band_site) %>%
+#   #slice_min(n = 20)
+#   top_n(20, wt = "band_124") #
 tmp_features<- aug.mat[grepl("band", names(aug.mat))]
 tmp_variables <- aug.mat[names(aug.mat) %in% trait]
 tmp_variables <- (round(tmp_variables,3))
-bnd_site <- test.data.x[["band_site"]] %>% factor %>% fastDummies::dummy_cols()
+bnd_site <- aug.mat[["SITE"]] %>% factor %>% fastDummies::dummy_cols()
 colnames(bnd_site) <- stringr::str_replace(colnames(bnd_site), ".data_", "band_")
-test.data.x <- cbind.data.frame(bnd_site[-1], tmp_features[-1], tmp_variables)
+test.data.x <- cbind.data.frame(bnd_site[-1], tmp_features, tmp_variables)
 test.data.x <- test.data.x %>% select(-one_of(trait))
 
 crownID = aug.mat["individualID"]
@@ -164,7 +164,7 @@ for(bb in 1:length(weights)){
 }
 colnames(output) <- c("individualID", "modelID", "yhat")
 colnames(output.daic) <- c("individualID", "yhat")
-
+test.data.y$individualID = factor(test.data.y$individualID, levels = unique(output$individualID))
 #compare pixel predicions with crowns
 output <- inner_join(output, test.data.y, by = "individualID")
 output.daic <- inner_join(output.daic, test.data.y, by = "individualID")
@@ -178,9 +178,8 @@ epbm_r2 <-  1 - sum((output.daic$yhat - (output.daic[[trait]]))^2) /
 #crown aggregation R2
 crown.based.daic <- output.daic %>%
   group_by(individualID) %>%
-  summarise(yhat = median(yhat))
-crown.based.daic <- inner_join(crown.based.daic, test.data.y, by = "individualID")
-ceam_r2 <-  1 - sum((crown.based.daic$yhat - (crown.based.daic[[trait]]))^2) /
+  summarise(yhat = mean(yhat))
+ceam_r2 <-  1 - sum((tst$yhat - (crown.based.daic[[trait]]))^2) /
   sum((crown.based.daic[[trait]] - mean(crown.based.daic[[trait]]))^2)
 
 # #calculation of RMSE

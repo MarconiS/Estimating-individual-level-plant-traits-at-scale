@@ -16,9 +16,11 @@ build_model <- function(loop=1, dat_pt = "./indir/Spectra/chapter1_spectra.csv"
   }
   #clean pixels in the dataset using ndvi and nir fitler, and maybe  detecting outliers from pca
   spectra = read_csv(dat_pt)
+  spectra = spectra %>% group_by(individualID)%>% top_n(1, wt = flpt)
+  flpt =  spectra %>% select(flpt)
   spectra = spectra %>% select(-one_of("flpt"))
-  reduced_spectra = clean_spectra(spectra,  ndvi = 0.5, nir = 0.25)
-  spectra = cbind.data.frame(spectra[reduced_spectra$good_pix, 1:2], reduced_spectra$refl)
+  reduced_spectra = clean_spectra(spectra,  ndvi = 0.5, nir = 0.2)
+  spectra = cbind.data.frame(spectra[reduced_spectra$good_pix, 1], reduced_spectra$refl)
   spectra_ave = spectra %>% group_by(individualID) %>% summarize_all(wrangle)
   spectra = readr::read_csv("./indir/Spectra/reflectance_all.csv")
   spectra$individualID = as.character(spectra$individualID)

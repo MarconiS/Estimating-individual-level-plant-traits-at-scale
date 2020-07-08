@@ -14,18 +14,18 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     #get traits data
     cr.Traits <- readr::read_csv(paste("./indir/Traits/Chapter1_field_data.csv",sep=""))
     cr.Traits = cr.Traits %>% group_by(individualID) %>% summarize_all(wrangle)
-    cr.Traits = cr.Traits[complete.cases(cr.Traits),]
+      cr.Traits = cr.Traits[complete.cases(cr.Traits),]
     train_ids = readr::read_csv("./indir/Misc/train_ids.csv")
     calib_ids = readr::read_csv("./indir/Misc/calibration_ids.csv")
     test_ids = readr::read_csv("./indir/Misc/oob_ids.csv")
 
     #remove shaded
-    train_ids = train_ids %>% filter(CRLIGHT !="shade") %>%
-      dplyr::select(individualID) %>% unique
-    calib_ids = calib_ids %>% filter(CRLIGHT !="shade") %>%
-      dplyr::select(individualID) %>% unique
-    test_ids = test_ids %>% filter(CRLIGHT !="shade") %>%
-      dplyr::select(individualID) %>% unique
+    # train_ids = train_ids %>% filter(CRLIGHT !="shade") %>%
+    #   dplyr::select(individualID) %>% unique
+    # calib_ids = calib_ids %>% filter(CRLIGHT !="shade") %>%
+    #   dplyr::select(individualID) %>% unique
+    # test_ids = test_ids %>% filter(CRLIGHT !="shade") %>%
+    #   dplyr::select(individualID) %>% unique
 
     #cr.Traits %>% filter(individualID %in% spectra$individualID) %>% group_by(taxonID, SITE)%>%
     # sample_frac(0.4)
