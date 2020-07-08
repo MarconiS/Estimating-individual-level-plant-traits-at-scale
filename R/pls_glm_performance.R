@@ -1,13 +1,3 @@
-#' retrieve vegetation structure data  from NEON
-#'
-#'
-#' @return
-#' @export
-#' @examples
-#' @importFrom magrittr "%>%"
-#' @import Metrics
-#'
-#'
 
 trait = "Npercent"
 nbags = 100
@@ -114,6 +104,11 @@ test.data.x <- read.csv("./indir/Spectra/reflectance_all.csv") %>%
   filter(individualID %in% test.data.y$individualID)
 
 aug.mat = inner_join(test.data.x, test.data.y)
+aug.mat$individualID = factor(aug.mat$individualID)
+aug.mat = aug.mat %>%
+  dplyr::group_by(individualID, band_site) %>%
+  #slice_min(n = 20)
+  top_n(20, wt = "band_124") #
 tmp_features<- aug.mat[grepl("band", names(aug.mat))]
 tmp_variables <- aug.mat[names(aug.mat) %in% trait]
 tmp_variables <- (round(tmp_variables,3))

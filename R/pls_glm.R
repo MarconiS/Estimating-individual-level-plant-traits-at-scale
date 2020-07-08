@@ -59,7 +59,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     Y <- as.vector(train.data[,names(train.data) %in% trait])
     #K=nrow(Y)
     #get sites and set up sites fixed effects
-    nsites <- nrow(unique(aug.spectra["band_site"]))
+    nsites <- nrow(unique(bnd_site))
     # if(nrmlz==T){
     #   X.n <- t(diff(t((X[,-c(1:nsites)])),differences=1, lag=3))
     #   X <- cbind(X[,c(1:nsites)], X.n)

@@ -21,6 +21,7 @@ build_model <- function(loop=1, dat_pt = "./indir/Spectra/chapter1_spectra.csv"
   spectra = cbind.data.frame(spectra[reduced_spectra$good_pix, 1:2], reduced_spectra$refl)
   spectra_ave = spectra %>% group_by(individualID) %>% summarize_all(wrangle)
   spectra = readr::read_csv("./indir/Spectra/reflectance_all.csv")
+  spectra$individualID = as.character(spectra$individualID)
   #readr::write_csv(spectra, "./indir/Spectra/reflectance_all.csv")
   #readr::write_csv(spectra_ave, "./indir/Spectra/plot_reflectance.csv")
   #extract n combinations of pixles by extracting one per bag
