@@ -3,10 +3,10 @@
 # itcs = itcs %>% dplyr::filter(canopyPosition %in% c("Full sun", "Partially shaded", "Open grown"))
 #itcs = sf::st_as_sf(itcs, coords = c("longitude", "latitude"), crs = 4326)
 raster_path = "../../Data/ch1_plots"
-itcs = sf::read_sf("../../Data/Dimensions/OSBS_crown_polygons/OSBS_sample_polygons_edits_Feb2018.shp")
-itcs$ID_x = itcs$ID
+itcs = sf::read_sf("../../Data/Dimensions/TALL_crown_polygons/TALL_sample_crowns_edits_May2018.shp")
+itcs$ID_x = itcs$tree
 extract_spectra_from_itcs <- function(itcs, raster_path){
-  data = NULL
+  data = pix = NULL
   for(plt in unique(itcs$ID_x)){
     st_ic = itcs %>% dplyr::filter(ID_x == plt)
       tiles = list.files(raster_path, pattern = as.character(plt), full.names = T)
@@ -24,6 +24,7 @@ extract_spectra_from_itcs <- function(itcs, raster_path){
 
         colnames(foo) = c("individualID", paste("band", 1:369, sep = "_"))
         data[[pt]] = foo
+        pix[[pt]] = nrow(foo)
       },error=function(e){message(paste(pt,"tile is missing"))})
     }
   }
