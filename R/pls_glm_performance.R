@@ -26,7 +26,6 @@ pls_glm_predict <- function(object,newdata,
 #retrieve number of snaps
 softmax <- function(x) {
   x <- x[!is.na(x)]
-
   exp(x) / sum(exp(x))
 }
 
@@ -66,8 +65,7 @@ for(bb in mask[,1]){
 saveRDS(list(mod.aic, mod.r2), paste("./outdir/eval_", trait, ".rds", sep=""))
 #save the model ensemble in an R object
 #model_stack <- model_stack[mask[,1]]
-saveRDS(model_stack,
-        file = paste("./outdir/EPBMs/100_", trait, ".rds", sep=""))
+saveRDS(model_stack, file = paste("./outdir/EPBMs/100_", trait, ".rds", sep=""))
 # }else{
 #   model_stack <- readRDS(paste("./outdir/EPBMs/100", trait, ".rds", sep=""))
 # }
@@ -78,20 +76,20 @@ mod.aic=rep(0,length(model_stack))
 mod.r2=rep(0,length(model_stack))
 for(bb in 1: length(model_stack)){
   mod.aic[bb] <- model_stack[[bb]]$mod$FinalModel$aic
-  mod.r2[bb] <- -model_stack[[bb]]$pR2
+  mod.r2[bb] <- - model_stack[[bb]]$pR2
 
 }
-selected_mods = which(mod.aic %in% sort(mod.aic, decreasing = F)[1:nbags])
+#selected_mods = which(mod.aic %in% sort(mod.aic, decreasing = F)[1:nbags])
 #mod.aic = mod.r2
-mod.aic <- scale(mod.aic[selected_mods])
+mod.aic <- scale(mod.aic)
 delta.aic <- mod.aic - min(mod.aic)
 weights <- softmax(-0.5*delta.aic)
 
 #get response for training crowns
 train.data.y <- read.csv("./indir/Traits/Chapter1_field_data.csv") %>%
-  dplyr::select(c("individualID", trait))
+  dplyr::select(c(individualID, trait))
 #just_for_
-
+train.data.y = train.data.y[complete.cases(train.data.y),]
 #get OOB data crowns
 test.data.y = readr::read_csv("./indir/Misc/oob_ids.csv")
 #cleaning out of bag test Y and X
@@ -104,31 +102,31 @@ test.data.x <- read.csv("./indir/Spectra/reflectance_all.csv") %>%
   filter(individualID %in% test.data.y$individualID)
 
 aug.mat = inner_join(test.data.x, test.data.y)
-aug.mat$individualID = factor(aug.mat$individualID)
 # aug.mat = aug.mat %>%
 #   dplyr::group_by(individualID, band_site) %>%
 #   #slice_min(n = 20)
 #   top_n(20, wt = "band_124") #
 tmp_features<- aug.mat[grepl("band", names(aug.mat))]
 tmp_variables <- aug.mat[names(aug.mat) %in% trait]
-tmp_variables <- (round(tmp_variables,3))
+tmp_variables <- (round(tmp_variables,2))
 bnd_site <- aug.mat[["SITE"]] %>% factor %>% fastDummies::dummy_cols()
 colnames(bnd_site) <- stringr::str_replace(colnames(bnd_site), ".data_", "band_")
-test.data.x <- cbind.data.frame(bnd_site[-1], tmp_features, tmp_variables)
+aug.spectra <- data.frame(aug.spectra["individualID"], aug.spectra["taxonID"], bnd_site[-1], tmp_features, tmp_variables)
+
+test.data.x <- data.frame(bnd_site[-1], tmp_features, tmp_variables)
 test.data.x <- test.data.x %>% select(-one_of(trait))
 
 crownID = aug.mat["individualID"]
-colnames(test.data.x)[1:2] = c("band_OSBS", "band_TALL")
 test.data.x <- dplyr::select(test.data.x, colnames(model_stack[[1]]$mod$dataX))
 #transform features to mirror train features structure
 #test.data.x[test.data.x==0] = 0.0000001
-test.data.x=test.data.x[, colSums(is.na(test.data.x)) == 0]
+#test.data.x=test.data.x[, colSums(is.na(test.data.x)) == 0]
 # if(normz==T){
 #   foot <-t(diff(t(log(test.data.x[,-c(1:nsites)])),differences=1, lag=3))
 #   test.data.x <- cbind(test.data.x[,c(1:nsites)], foot)
 # }
 
-test.PLS = as.matrix(test.data.x)
+test.PLS = (test.data.x)
 
 #initialize variabiles
 rm(output)
@@ -138,38 +136,36 @@ output.daic =  output.up.daic = output.lw.daic =  crownID
 output.daic$yhat = output.up.daic$yhat = output.lw.daic$yhat =0
 
 for(bb in 1:length(weights)){
-  md = selected_mods[bb]
+  md = bb
   pls.mod.train <- model_stack[[md]]$mod
   optim.ncomps <- model_stack[[md]]$ncomp
   #make predictions using the ith model
   ith_mod_prediction <- pls_glm_predict(pls.mod.train, newdata = test.PLS,
                                         ncomp=optim.ncomps,  type='response')
   ith_mod_prediction=exp(ith_mod_prediction)
-  pred.val.data$fit <- ith_mod_prediction[,1]
-  pred.val.data$upper <- ith_mod_prediction[,3]
-  pred.val.data$lower <- ith_mod_prediction[,2]
-  out$output.daic <-  pred.val.data$fit
+
   out$upper <-  pred.val.data$upper
   out$lower <-  pred.val.data$lower
-  output.daic$yhat <- output.daic$yhat + pred.val.data$fit * weights[bb]
-  output.up.daic$yhat <- output.up.daic$yhat + pred.val.data$upper * weights[bb]
-  output.lw.daic$yhat <- output.lw.daic$yhat + pred.val.data$lower * weights[bb]
+  output.daic$yhat <- output.daic$yhat + ith_mod_prediction[,1] * weights[bb]
+  output.up.daic$yhat <- output.up.daic$yhat + ith_mod_prediction[,3] * weights[bb]
+  output.lw.daic$yhat <- output.lw.daic$yhat + ith_mod_prediction[,2] * weights[bb]
   #you have then a vector of predicions whose legnth is sum(crID_i * pixels_i)
   if(!exists("output")){
-    output <- cbind.data.frame(crownID, rep(bb, dim(test.data.x)[1]), as.vector(pred.val.data$fit))
+    output <- cbind.data.frame(crownID, rep(bb, dim(test.data.x)[1]), as.vector(ith_mod_prediction[,1]))
   }else{
     output <- rbind.data.frame(output, as.matrix(cbind(crownID, rep(bb, dim(test.data.x)[1]),
-                                                       as.vector(pred.val.data$fit))))
+                                                       as.vector(ith_mod_prediction[,1]))))
   }
 }
 colnames(output) <- c("individualID", "modelID", "yhat")
 colnames(output.daic) <- c("individualID", "yhat")
-test.data.y$individualID = factor(test.data.y$individualID, levels = unique(output$individualID))
 #compare pixel predicions with crowns
 output <- inner_join(output, test.data.y, by = "individualID")
 output.daic <- inner_join(output.daic, test.data.y, by = "individualID")
 output = output[complete.cases(output),]
 output.daic = output.daic[complete.cases(output.daic),]
+output$yhat = round(output$yhat,2)
+output.daic$yhat = (round(output.daic$yhat,2))
 
 pbm_all <- 1 - sum((as.numeric(output[["yhat"]]) - (output[[trait]]))^2) / sum((output[[trait]] - mean(output[[trait]]))^2)
 epbm_r2 <-  1 - sum((output.daic$yhat - (output.daic[[trait]]))^2) /
@@ -177,9 +173,10 @@ epbm_r2 <-  1 - sum((output.daic$yhat - (output.daic[[trait]]))^2) /
 
 #crown aggregation R2
 crown.based.daic <- output.daic %>%
+  select(c("yhat", trait, "individualID")) %>%
   group_by(individualID) %>%
-  summarise(yhat = mean(yhat))
-ceam_r2 <-  1 - sum((tst$yhat - (crown.based.daic[[trait]]))^2) /
+  summarise_if(is.numeric, median)
+ceam_r2 <-  1 - sum((crown.based.daic$yhat - (crown.based.daic[[trait]]))^2) /
   sum((crown.based.daic[[trait]] - mean(crown.based.daic[[trait]]))^2)
 
 # #calculation of RMSE

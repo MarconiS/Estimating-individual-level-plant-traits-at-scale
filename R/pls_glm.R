@@ -17,7 +17,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
       cr.Traits = cr.Traits[complete.cases(cr.Traits),]
     train_ids = readr::read_csv("./indir/Misc/train_ids.csv")
     calib_ids = readr::read_csv("./indir/Misc/calibration_ids.csv")
-    test_ids = readr::read_csv("./indir/Misc/oob_ids.csv")
+    #test_ids = readr::read_csv("./indir/Misc/oob_ids.csv")
 
     #remove shaded
     # train_ids = train_ids %>% filter(CRLIGHT !="shade") %>%
