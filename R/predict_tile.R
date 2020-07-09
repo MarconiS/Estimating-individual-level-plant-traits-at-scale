@@ -6,7 +6,7 @@ f = args[6]
 siteID = args[7]
 trait = args[8]
 nbags = args[9]
-get_transformation = F
+get_transformation = T
 # make prediction for a tile
 library(tidyverse)
 library(raster)
@@ -45,7 +45,7 @@ rbbox = dim(dat)
 dat = as.data.table.raster(dat)
 colnames(dat) = paste("band", 1:369, sep="_")
 if(get_transformation == T){
-  reduced_spectra = clean_spectra(dat)
+  reduced_spectra = clean_spectra(dat, ndvi = 0.7, nir = 0.3)
   saveRDS(reduced_spectra, paste(tmp_dir, f, sep ="/"))
 }else{
   reduced_spectra = readRDS(paste(tmp_dir, f, sep ="/"))
