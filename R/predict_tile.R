@@ -58,7 +58,7 @@ if(get_transformation == T){
     colnames(bnd_site) <- stringr::str_replace(colnames(bnd_site), ".data_", "band_")
     dat = cbind.data.frame(bnd_site, dat)
     rm(bnd_site)
-    model_stack <- readRDS(paste("/orange/ewhite/s.marconi/Chapter1/hiPyRneon/outdir/EPBMs/1002", trait, ".rds", sep=""))
+    model_stack <- readRDS(paste("/orange/ewhite/s.marconi/Chapter1/hiPyRneon/outdir/EPBMs/100_", trait, ".rds", sep=""))
     mod_col = model_stack[[1]]$mod$dataX %>% names
     dat = dat %>% dplyr::select(mod_col)
     # calculate, scale the dAIC to rank and weight each model using a softmax function
