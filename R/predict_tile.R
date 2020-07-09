@@ -6,7 +6,7 @@ f = args[6]
 siteID = args[7]
 trait = args[8]
 nbags = args[9]
-get_transformation = T
+get_transformation = F
 # make prediction for a tile
 library(tidyverse)
 library(raster)
