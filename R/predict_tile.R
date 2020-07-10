@@ -6,7 +6,7 @@ f = args[6]
 siteID = args[7]
 trait = args[8]
 nbags = args[9]
-get_transformation = F
+get_transformation = T
 # make prediction for a tile
 library(tidyverse)
 library(raster)
@@ -22,9 +22,9 @@ softmax <- function(x) {
 
 
 # get spectra and clean it
-# f = "400000_3277000_161934.tif"
-# siteID = "OSBS"
-# trait = "LMA"
+# f = "465000_3637000_145036.tif"
+# siteID = "TALL"
+# trait = "Ppercent"
 # nbags = 100
 
 #epsg = 32617
@@ -45,15 +45,17 @@ rbbox = dim(dat)
 dat = as.data.table.raster(dat)
 colnames(dat) = paste("band", 1:369, sep="_")
 if(get_transformation == T){
+  dat
   reduced_spectra = clean_spectra(dat, ndvi = 0.7, nir = 0.3)
   saveRDS(reduced_spectra, paste(tmp_dir, f, sep ="/"))
-}else{
+#}else{
   reduced_spectra = readRDS(paste(tmp_dir, f, sep ="/"))
   dat = reduced_spectra$refl
   reduced_spectra = reduced_spectra$good_pix
   if( nrow(dat) !=0){
     #dat = dat[complete.cases(dat),]
     #add site band
+    #check = apply(dat, 1, min)
     bnd_site <- rep(siteID, nrow(dat)) %>% factor(levels=sites) %>% fastDummies::dummy_cols()
     colnames(bnd_site) <- stringr::str_replace(colnames(bnd_site), ".data_", "band_")
     dat = cbind.data.frame(bnd_site, dat)
@@ -66,20 +68,19 @@ if(get_transformation == T){
     for(bb in 1: length(model_stack)){
       mod.aic[bb] <- model_stack[[bb]]$mod$FinalModel$aic
     }
-    selected_mods = which(mod.aic %in% sort(mod.aic, decreasing = F)[1:nbags])
+    #selected_mods = which(mod.aic %in% sort(mod.aic, decreasing = F)[1:nbags])
     #mod.aic = mod.r2
-    mod.aic <- scale(mod.aic[selected_mods])
+    mod.aic <- scale(mod.aic)#[selected_mods])
     delta.aic <- mod.aic - min(mod.aic)
     weights <- softmax(-0.5*delta.aic)
 
     output.daic = matrix(0,nrow(dat), 3)
     for(bb in 1:length(weights)){
-      md = selected_mods[bb]
+      md = bb #selected_mods[bb]
       pls.mod.train <- model_stack[[md]]$mod
       optim.ncomps <- model_stack[[md]]$ncomp
       #make predictions using the ith model
       newdata = dat
-      nrnd <- nrow(newdata)
       newdata <- sweep(sweep(newdata, 2, attr(pls.mod.train$ExpliX, "scaled:center")),
                        2, attr(pls.mod.train$ExpliX, "scaled:scale"), "/")
       newdata <- as.matrix(newdata)
@@ -92,7 +93,7 @@ if(get_transformation == T){
       pred_int = HH::interval(pls.mod.train$FinalModel, newdata=newdata, type="response")
       pred_int = pred_int[,c(1,4,5)]
       colnames(pred_int) = c("fit","lwr","upr")
-      output.daic <-pred_int * weights[bb]
+      output.daic <- output.daic + pred_int * weights[bb]
     }
     #rm(model_stack)
     dat = matrix(NA, length(reduced_spectra), 3)
