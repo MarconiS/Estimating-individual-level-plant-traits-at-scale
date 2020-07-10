@@ -6,7 +6,7 @@ f = args[6]
 siteID = args[7]
 trait = args[8]
 nbags = args[9]
-get_transformation = T
+get_transformation = F
 # make prediction for a tile
 library(tidyverse)
 library(raster)
@@ -48,7 +48,7 @@ if(get_transformation == T){
   dat
   reduced_spectra = clean_spectra(dat, ndvi = 0.7, nir = 0.3)
   saveRDS(reduced_spectra, paste(tmp_dir, f, sep ="/"))
-#}else{
+}else{
   reduced_spectra = readRDS(paste(tmp_dir, f, sep ="/"))
   dat = reduced_spectra$refl
   reduced_spectra = reduced_spectra$good_pix
@@ -84,7 +84,7 @@ if(get_transformation == T){
       newdata <- sweep(sweep(newdata, 2, attr(pls.mod.train$ExpliX, "scaled:center")),
                        2, attr(pls.mod.train$ExpliX, "scaled:scale"), "/")
       newdata <- as.matrix(newdata)
-
+      nrnd <- nrow(newdata)
       newdata = lapply(1:nrnd, function(x)c(newdata[x,] %*% pls.mod.train$wwetoile[, 1:optim.ncomps],
                                             rep(0, pls.mod.train$computed_nt - optim.ncomps)))
       newdata = do.call(rbind, newdata)
