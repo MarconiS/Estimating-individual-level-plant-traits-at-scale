@@ -1,5 +1,5 @@
 #!/bin/bash
-build_model <- function(loop=1, dat_pt = "./indir/Spectra/chapter1_spectra.csv"
+build_model <- function(loop=1, dat_pt = "./indir/Spectra/silva_final.csv"
                         ,tr = c("LMA", "Npercent", "Ppercent", "Cpercent")){
   library(tidyverse)
   library(plsRglm)
@@ -16,14 +16,15 @@ build_model <- function(loop=1, dat_pt = "./indir/Spectra/chapter1_spectra.csv"
   }
   #clean pixels in the dataset using ndvi and nir fitler, and maybe  detecting outliers from pca
   spectra = read_csv(dat_pt)
+  spectra = spectra[complete.cases(spectra),]
   reduced_spectra = clean_spectra(spectra,  ndvi = 0.7, nir = 0.3)
   spectra = cbind.data.frame(spectra[reduced_spectra$good_pix, 1:2], reduced_spectra$refl)
   spectra = spectra %>% group_by(individualID)%>% top_n(1, wt = flpt)
   spectra_ave = spectra %>% group_by(individualID) %>% summarize_all(wrangle)
   spectra = spectra %>% select(-one_of("flpt"))
-  spectra = readr::read_csv("./indir/Spectra/reflectance_all.csv")
-  #readr::write_csv(spectra, "./indir/Spectra/reflectance_all.csv")
-  #readr::write_csv(spectra_ave, "./indir/Spectra/plot_reflectance.csv")
+  spectra = readr::read_csv("./indir/Spectra/reflectance_silva.csv")
+  #readr::write_csv(spectra, "./indir/Spectra/reflectance_silva.csv")
+  #readr::write_csv(spectra_ave, "./indir/Spectra/plot_silva.csv")
   #extract n combinations of pixles by extracting one per bag
   get_random_bags(spectra, lp = loop)
   # run the pls glm on training bags for each random extractions

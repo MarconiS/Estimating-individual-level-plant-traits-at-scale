@@ -48,3 +48,4 @@ clean_spectra <- function(brick, ndvi = 0.3, nir = 0.1, outlier = F){
   brick = brick[complete.cases(brick),]
   return(list(refl = brick, good_pix = good_pix))
 }
+
