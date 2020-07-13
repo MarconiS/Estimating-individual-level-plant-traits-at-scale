@@ -94,8 +94,10 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
 
     #store validation metrics
     Y.test <- as.vector(test.data[,names(test.data) %in% trait])
+    Y.test = round(Y.test, 2)
     out[["pred"]] <- exp(pls_glm_predict(mod, newdata=X.tst,
                              type="response",comps=as.integer(out["ncomp"])))
+    out[["pred"]] = round(out[["pred"]], 2)
     out[["pR2"]] <- 1 - sum((out[["pred"]][,1] - (Y.test))^2) /
       sum((Y.test - mean(Y.test))^2)
     out[["mod"]] <- mod

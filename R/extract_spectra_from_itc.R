@@ -3,8 +3,10 @@
 # itcs = itcs %>% dplyr::filter(canopyPosition %in% c("Full sun", "Partially shaded", "Open grown"))
 #itcs = sf::st_as_sf(itcs, coords = c("longitude", "latitude"), crs = 4326)
 raster_path = "../../Data/ch1_plots"
-itcs = sf::read_sf("../../Data/Dimensions/OSBS_crown_polygons/OSBS_sample_polygons_edits_Feb2018.shp")
-itcs$ID_x = itcs$ID
+#itcs = sf::read_sf("../../Data/Dimensions/OSBS_crown_polygons/OSBS_sample_polygons_edits_Feb2018.shp")
+itcs = sf::read_sf("../../Data/Dimensions/silva_osbs.shp")
+itcs$ID_x = itcs$treeid
+itcs = itcs %>%filter(!is.na(ID_x))
 extract_spectra_from_itcs <- function(itcs, raster_path){
   data = pix = NULL
   for(plt in unique(itcs$ID_x)){
@@ -34,7 +36,7 @@ extract_spectra_from_itcs <- function(itcs, raster_path){
   dat = cbind.data.frame(flpt, dat)
   dat["band_site"] = "OSBS"
   rownames(dat)=NULL
-  readr::write_csv(final, "./indir/spectra/final.csv")
+  readr::write_csv(final, "./indir/spectra/silva_final.csv")
 }
 
 extract_spectra_from_itcs(itcs, raster_path)
