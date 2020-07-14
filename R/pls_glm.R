@@ -106,7 +106,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     up = out$pred[,3] > Y.test
     sum(lw*up)/length(Y.test)
 
-    saveRDS(out, paste("./outdir/PBMs/pls_glm_ave", trait, ll, ".rds", sep=""))
+    saveRDS(out, paste("./outdir/PBMs/pls_glm", trait, ll, ".rds", sep=""))
   return(out)
 }
 
