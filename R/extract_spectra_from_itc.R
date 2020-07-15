@@ -4,8 +4,8 @@
 #itcs = sf::st_as_sf(itcs, coords = c("longitude", "latitude"), crs = 4326)
 raster_path = "../../Data/ch1_plots"
 #itcs = sf::read_sf("../../Data/Dimensions/OSBS_crown_polygons/OSBS_sample_polygons_edits_Feb2018.shp")
-itcs = sf::read_sf("../../Data/Dimensions/silva_osbs.shp")
-itcs$ID_x = itcs$treeid
+itcs = sf::read_sf("../../Data/Dimensions/silva_tall.shp")
+itcs$ID_x = itcs$treeID
 itcs = itcs %>%filter(!is.na(ID_x))
 extract_spectra_from_itcs <- function(itcs, raster_path){
   data = pix = NULL
@@ -18,7 +18,8 @@ extract_spectra_from_itcs <- function(itcs, raster_path){
         raster::crs(hsi) = raster::crs(st_ic)
         #extract hsi with a buffer if point, or exact polygon if itc
         #if(class(st_geometry(st_ic))[1] == "sfc_POINT"){
-        foo = raster::extract(hsi, st_ic)#, buffer = 1)
+        st_ic = sf::st_centroid(st_ic)
+        foo = raster::extract(hsi, st_ic, buffer = 2)
         # add individual id to extracte pixels
         individualID = st_ic$ID_x
         foo = lapply(1:length(individualID), function(x) cbind(individualID[[x]], foo[[x]]))
@@ -34,9 +35,9 @@ extract_spectra_from_itcs <- function(itcs, raster_path){
   flpt = do.call(rbind.data.frame, strsplit(unlist(flpt), split = "_"))[1]
   colnames(flpt) = "flpt"
   dat = cbind.data.frame(flpt, dat)
-  dat["band_site"] = "OSBS"
+  dat["band_site"] = "TALL"
   rownames(dat)=NULL
-  readr::write_csv(final, "./indir/spectra/silva_final.csv")
+  readr::write_csv(final, "./indir/spectra/silva_save_15.csv")
 }
 
 extract_spectra_from_itcs(itcs, raster_path)

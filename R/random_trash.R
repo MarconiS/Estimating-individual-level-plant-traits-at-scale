@@ -2,10 +2,10 @@ clean_data = list()
 plot_spectra<-function(spectra){
   #plot reflectances
   id = spectra$individualID %>% unique
-  id = c(146, 192, 238, 242, 260, 326, 328, 331, 339, 343, 349, 350, 357, 365, 368, 2108, 2118, 2119, 2128, 2130, 2131, 2132, 2137, 2151, 2159, 2165, 2174, 2178, 2180, 2200, 2202, 2205, 2242)
+  #id = c(146, 192, 238, 242, 260, 326, 328, 331, 339, 343, 349, 350, 357, 365, 368, 2108, 2118, 2119, 2128, 2130, 2131, 2132, 2137, 2151, 2159, 2165, 2174, 2178, 2180, 2200, 2202, 2205, 2242)
   ii = ii+1
   plot_data <- spectra %>%
-    dplyr::select(-one_of(c("site_ID", "species_ID",  "band_site","band_species", "flightpath"))) %>%
+    dplyr::select(-one_of(c("site_ID", "species_ID",  "band_site","band_species", "flpt"))) %>%
     dplyr::filter(individualID == id[ii])
   outlrs = remove_outliers(plot_data)
   if(length(outlrs$outliers) > 0){
