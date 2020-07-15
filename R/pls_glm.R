@@ -102,14 +102,14 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     #out[["pred"]] = round(out[["pred"]], 2)
     out[["pR2"]] <- 1 - sum((out[["pred"]][,1] - (Y.test))^2) /
       sum((Y.test - mean(Y.test))^2)
-    plot(out$pred[,1], Y.test)
+    #plot(out$pred[,1], Y.test)
     out[["mod"]] <- mod
     #a = rmse(out$pred[,1], Y.test)
-    lw = out$pred[,2] <Y.test
-    up = out$pred[,3] > Y.test
-    sum(lw*up)/length(Y.test)
-    rmse_ = rmse(Y.test, out[["pred"]])
-    rmse_ / abs(diff(range(Y.test)))
+    # lw = out$pred[,2] <Y.test
+    # up = out$pred[,3] > Y.test
+    # sum(lw*up)/length(Y.test)
+    # rmse_ = rmse(Y.test, out[["pred"]])
+    # rmse_ / abs(diff(range(Y.test)))
     saveRDS(out, paste("./outdir/PBMs/pls_glm_", trait, ll, ".rds", sep=""))
   return(out)
 }
