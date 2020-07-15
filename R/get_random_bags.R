@@ -19,7 +19,7 @@ get_random_bags<- function(allData, lp = 1, seed = 1987){
     }else{
       # set reproducible random seed different for each of the n extractions
       set.seed(seed)
-      rraand <- lp *runif(1, 1, 10^6)
+      rraand <- lp *runif(1, 1, 10^3)
       set.seed(as.integer(rraand)) # todo: change laps * odd number?
       #extract one pixel per bag and create the ith dataset
       bootDat[[tk]] <- tmp_id %>% sample_n(1)
