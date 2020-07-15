@@ -73,7 +73,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     set.seed(ll)
     #perform a cross-valiadation on train-validation set
     train.PLS<- plsRglm::cv.plsRglm(dataY=log(Y),dataX=X, scaleY = T, verbose=F,
-                                    nt=15,NK=1, K=10,
+                                    nt=15,NK=1, K=5,
                                     modele="pls-glm-family",family=gaussian())
     out <- list()
     #define number of components to chose by calculating PRESS statistics
@@ -102,7 +102,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     #out[["pred"]] = round(out[["pred"]], 2)
     out[["pR2"]] <- 1 - sum((out[["pred"]][,1] - (Y.test))^2) /
       sum((Y.test - mean(Y.test))^2)
-    #plot(out$pred[,1], Y.test)
+    # plot(out$pred[,1], Y.test)
     out[["mod"]] <- mod
     #a = rmse(out$pred[,1], Y.test)
     # lw = out$pred[,2] <Y.test
