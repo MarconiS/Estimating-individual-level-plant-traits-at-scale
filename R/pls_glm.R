@@ -31,7 +31,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     # sample_frac(0.4)
     #get random flip spectra data
     aug.spectra <- readr::read_csv(paste('./indir/Permutations/onePix1Crown_', ll, '.csv', sep = ''))
-    #aug.spectra <- readr::read_csv(paste('./indir/Spectra/plot_save.csv'))
+    aug.spectra <- readr::read_csv(paste('./indir/Spectra/plot_fave.csv'))
     #aug.spectra = spectra_ave
     aug.spectra <- inner_join(cr.Traits, aug.spectra, by = "individualID")
     aug.spectra = aug.spectra %>% filter(!individualID %in% test_ids)
@@ -45,8 +45,9 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     # Subset data into cal/val by site
     train.data = aug.spectra %>% filter(individualID %in% train_ids$individualID)
     test.data = aug.spectra %>% filter(individualID %in% calib_ids$individualID)
-    #test.data = aug.spectra %>% filter(individualID %in% test_ids$individualID)
-    # test.data = oob.data
+    test.data = aug.spectra %>% filter(individualID %in% test_ids$individualID)
+
+      # test.data = oob.data
     # #eval.set <- cut_set(aug.X, c.id = aug.spectra[["individualID"]])
     #train.data <- eval.set$train
     #test.data <- eval.set$test
@@ -73,7 +74,7 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     set.seed(ll)
     #perform a cross-valiadation on train-validation set
     train.PLS<- plsRglm::cv.plsRglm(dataY=log(Y),dataX=X, scaleY = T, verbose=F,
-                                    nt=15,NK=1, K=5,
+                                    nt=15,NK=1, K=10,
                                     modele="pls-glm-family",family=gaussian())
     out <- list()
     #define number of components to chose by calculating PRESS statistics
@@ -102,14 +103,16 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     #out[["pred"]] = round(out[["pred"]], 2)
     out[["pR2"]] <- 1 - sum((out[["pred"]][,1] - (Y.test))^2) /
       sum((Y.test - mean(Y.test))^2)
-    # plot(out$pred[,1], Y.test)
+    #plot(out$pred[,1], Y.test)
     out[["mod"]] <- mod
-    #a = rmse(out$pred[,1], Y.test)
-    # lw = out$pred[,2] <Y.test
-    # up = out$pred[,3] > Y.test
-    # sum(lw*up)/length(Y.test)
-    # rmse_ = rmse(Y.test, out[["pred"]])
-    # rmse_ / abs(diff(range(Y.test)))
+    out[["pR2"]]
+    a = rmse(out$pred[,1], Y.test)
+    lw = out$pred[,2] <Y.test
+    up = out$pred[,3] > Y.test
+    sum(lw*up)/length(Y.test)
+    rmse_ = rmse(Y.test, out[["pred"]])
+    rmse_
+    rmse_ / abs(diff(range(Y.test)))
     saveRDS(out, paste("./outdir/PBMs/pls_glm_", trait, ll, ".rds", sep=""))
   return(out)
 }
