@@ -12,27 +12,16 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
       ifelse(is.character(x), x[1], mean(x, na.rm=T))
     }
     #get traits data
-    cr.Traits <- readr::read_csv(paste("./indir/Traits/Chapter1_field_data.csv",sep=""))
+    cr.Traits <- readr::read_csv(paste("./indir/Traits/field_data.csv",sep=""))
     cr.Traits = cr.Traits %>% group_by(individualID) %>% summarize_all(wrangle)
     cr.Traits = cr.Traits[complete.cases(cr.Traits),]
     train_ids = readr::read_csv("./indir/Misc/train_ids.csv")
     calib_ids = readr::read_csv("./indir/Misc/calibration_ids.csv")
     test_ids = readr::read_csv("./indir/Misc/oob_ids.csv")
 
-    #remove shaded
-    # train_ids = train_ids %>% filter(CRLIGHT !="shade") %>%
-    #   dplyr::select(individualID) %>% unique
-    # calib_ids = calib_ids %>% filter(CRLIGHT !="shade") %>%
-    #   dplyr::select(individualID) %>% unique
-    # test_ids = test_ids %>% filter(CRLIGHT !="shade") %>%
-    #   dplyr::select(individualID) %>% unique
-
-    #cr.Traits %>% filter(individualID %in% spectra$individualID) %>% group_by(taxonID, SITE)%>%
-    # sample_frac(0.4)
     #get random flip spectra data
     aug.spectra <- readr::read_csv(paste('./indir/Permutations/onePix1Crown_', ll, '.csv', sep = ''))
-    aug.spectra <- readr::read_csv(paste('./indir/Spectra/plot_fave.csv'))
-    #aug.spectra = spectra_ave
+
     aug.spectra <- inner_join(cr.Traits, aug.spectra, by = "individualID")
     aug.spectra = aug.spectra %>% filter(!individualID %in% test_ids)
     tmp_features<- aug.spectra[grepl("band", names(aug.spectra))]
@@ -47,12 +36,6 @@ pls_glm <- function(ll = NULL, trait = NULL, nrmlz=F){
     test.data = aug.spectra %>% filter(individualID %in% calib_ids$individualID)
     test.data = aug.spectra %>% filter(individualID %in% test_ids$individualID)
 
-      # test.data = oob.data
-    # #eval.set <- cut_set(aug.X, c.id = aug.spectra[["individualID"]])
-    #train.data <- eval.set$train
-    #test.data <- eval.set$test
-    #colnames(train.data)[1] <- "taxonID"
-    #colnames(test.data)[1] <- "taxonID"
     #predictors matrix
     train.data= train.data %>% dplyr::select(-one_of("band_site"))
     test.data= test.data %>% dplyr::select(-one_of("band_site"))
